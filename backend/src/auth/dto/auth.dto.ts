@@ -1,0 +1,99 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+
+export class LoginDto {
+  @ApiProperty({ example: 'admin@forexmate.com', description: 'User email address' })
+  @IsEmail({}, { message: 'Please provide a valid email address' })
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty({ example: 'admin123', description: 'User password' })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6, { message: 'Password must be at least 6 characters long' })
+  password: string;
+
+  @ApiProperty({ example: 'device-uuid', required: false, description: 'Optional device tracking ID' })
+  @IsString()
+  @IsOptional()
+  deviceId?: string;
+}
+
+export class RegisterDto {
+  @ApiProperty({ example: 'user@example.com' })
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty({ example: 'password123' })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
+  password: string;
+
+  @ApiProperty({ example: 'John Doe' })
+  @IsString()
+  @IsNotEmpty()
+  fullName: string;
+
+  @ApiProperty({ example: '9999999999' })
+  @IsString()
+  @IsNotEmpty()
+  mobile: string;
+}
+
+export class GoogleLoginDto {
+  @ApiProperty({ example: 'google-oauth-access-token' })
+  @IsString()
+  @IsNotEmpty()
+  credential: string;
+}
+
+export class SendOtpDto {
+  @ApiProperty({ example: 'user@example.com' })
+  @IsString()
+  @IsNotEmpty()
+  recipient: string;
+
+  @ApiProperty({ example: 'LOGIN' })
+  @IsString()
+  @IsNotEmpty()
+  purpose: string;
+}
+
+export class VerifyOtpDto {
+  @ApiProperty({ example: 'user@example.com' })
+  @IsString()
+  @IsNotEmpty()
+  recipient: string;
+
+  @ApiProperty({ example: 'LOGIN' })
+  @IsString()
+  @IsNotEmpty()
+  purpose: string;
+
+  @ApiProperty({ example: '123456' })
+  @IsString()
+  @IsNotEmpty()
+  code: string;
+}
+
+export class RequestResetDto {
+  @ApiProperty({ example: 'user@example.com' })
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+}
+
+export class ResetPasswordDto {
+  @ApiProperty({ example: 'hex-token-string' })
+  @IsString()
+  @IsNotEmpty()
+  token: string;
+
+  @ApiProperty({ example: 'newpassword123' })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
+  password: string;
+}

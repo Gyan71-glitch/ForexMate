@@ -1,0 +1,1584 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id            String      @id @default(uuid())
+  name          String
+  gst           String      @unique
+  cin           String      @unique
+  logo          String?
+  address       String
+  licenseNumber String      @unique
+  website       String?
+  email         String
+  phone         String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  branches      Branch[]
+  dealers       Dealer[]
+  franchises    Franchise[]
+}
+
+model City {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  state       String
+  country     String   @default("India")
+  status      String   @default("ACTIVE")
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  branches    Branch[]
+}
+
+model Branch {
+  id              String                     @id @default(uuid())
+  companyId       String
+  branchCode      String                     @unique
+  branchName      String
+  branchAddress   String
+  branchCity      String
+  cityId          String?
+  managerId       String?
+  branchType      String                     @default("MAIN_BRANCH")
+  lat             Float?
+  lng             Float?
+  phone           String?
+  email           String?
+  status          String                     @default("ACTIVE")
+  vaultCapacity   Decimal                    @default(10000000.00)
+  workingHours    String?
+  cashLimitInr    Decimal                    @default(1000000.00)
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
+  company         Company                    @relation(fields: [companyId], references: [id])
+  city            City?                      @relation(fields: [cityId], references: [id])
+  manager         Employee?                  @relation("BranchManagerRelation", fields: [managerId], references: [id])
+  staff           BranchStaff[]
+  vaults          BranchVault[]
+  reconciliations DailyVaultReconciliation[]
+  expenses        Expense[]
+  transfersRecv   InventoryTransfer[]        @relation("DestBranch")
+  transfersSent   InventoryTransfer[]        @relation("SourceBranch")
+  orders          Order[]
+  tasks           BranchTask[]
+  branchInventory       BranchInventory[]
+  inventoryReservations InventoryReservation[]
+  inventoryMovements     InventoryMovement[]
+  pickupHandovers       PickupHandover[]
+  cashiers              Cashier[]
+  deliveryPartners      DeliveryPartner[]
+  cashAllocations       CashAllocation[]
+  employees             Employee[]           @relation("EmployeeBranchRelation")
+  vaultTransfersSent    VaultTransfer[]      @relation("SourceVaultTransfer")
+  vaultTransfersRecv    VaultTransfer[]      @relation("DestVaultTransfer")
+}
+
+model BranchStaff {
+  id          String   @id @default(uuid())
+  branchId    String
+  userId      String   @unique
+  designation String
+  joiningDate DateTime @default(now())
+  status      String   @default("ACTIVE")
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Franchise {
+  id           String   @id @default(uuid())
+  companyId    String
+  name         String
+  code         String   @unique
+  ownerName    String
+  email        String
+  phone        String
+  agreementUrl String?
+  marginShare  Float    @default(0.50)
+  createdAt    DateTime @default(now())
+  company      Company  @relation(fields: [companyId], references: [id])
+}
+
+model Dealer {
+  id             String   @id @default(uuid())
+  companyId      String
+  name           String
+  gst            String?
+  pan            String
+  contactPerson  String
+  email          String
+  phone          String
+  creditLimit    Decimal  @default(0.00)
+  settlementDays Int      @default(0)
+  createdAt      DateTime @default(now())
+  company        Company  @relation(fields: [companyId], references: [id])
+}
+
+model Vendor {
+  id          String   @id @default(uuid())
+  name        String
+  gst         String?
+  pan         String
+  contactName String
+  email       String
+  phone       String
+  serviceType String
+  createdAt   DateTime @default(now())
+}
+
+model User {
+  id                  String                     @id @default(uuid())
+  email               String                     @unique
+  password            String
+  fullName            String?
+  mobile              String?
+  status              String                     @default("ACTIVE")
+  userType            UserType                   @default(CUSTOMER)
+  roleId              Int?
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+  failedAttempts      Int                        @default(0)
+  isEmailVerified     Boolean                    @default(false)
+  isPhoneVerified     Boolean                    @default(false)
+  lockoutUntil        DateTime?
+  mfaBackupCodesHash  String?
+  mfaEnabled          Boolean                    @default(false)
+  mfaPreferredMethod  String                     @default("NONE")
+  mfaSecret           String?
+  approvalActions     ApprovalStep[]             @relation("ApprovalActor")
+  auditLogs           AuditLog[]
+  staffProfile        BranchStaff?
+  profiles            CustomerProfile?
+  reconciliations     DailyVaultReconciliation[] @relation("Reconciler")
+  emailVerifications  EmailVerificationToken[]
+  ForexCard           ForexCard[]
+  transfersSent       InventoryTransfer[]        @relation("Custodian")
+  KycDocument         KycDocument[]
+  kycReviews          KycReview[]                @relation("KycReviewer")
+  statusHistory       OrderStatusHistory[]       @relation("StatusChanger")
+  passwordResetTokens PasswordResetToken[]
+  phoneVerifications  PhoneVerificationToken[]
+  ticketsCreated      SupportTicket[] @relation("TicketCreator")
+  ticketsAssigned     SupportTicket[] @relation("TicketAssignee")
+  messages            TicketMessage[]
+  activities          TicketActivity[]
+  transactionSessions TransactionSession[]
+  trustedDevices      TrustedDevice[]
+  roleRef             Role?                      @relation(fields: [roleId], references: [id])
+  devices             UserDevice[]
+  inAppNotifications  InAppNotification[]        @relation("UserNotifications")
+  sessions            UserSession[]
+  workflowActions     WorkflowHistory[]          @relation("WorkflowActor")
+  tasksAssigned       BranchTask[]               @relation("TaskAssignee")
+  assignedOrders      Order[]                    @relation("OrderAssignee")
+}
+
+model Role {
+  id            Int              @id @default(autoincrement())
+  name          String           @unique
+  approvalSteps ApprovalStep[]
+  permissions   RolePermission[]
+  users         User[]
+  workflowSteps WorkflowStep[]
+}
+
+model Permission {
+  id     Int              @id @default(autoincrement())
+  action String           @unique
+  roles  RolePermission[]
+}
+
+model RolePermission {
+  roleId       Int
+  permissionId Int
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model UserSession {
+  id               String    @id @default(uuid())
+  userId           String
+  createdAt        DateTime  @default(now())
+  expiresAt        DateTime
+  browser          String?
+  city             String?
+  country          String?
+  deviceId         String?
+  ip               String?
+  lastActivity     DateTime  @default(now())
+  os               String?
+  refreshTokenHash String    @unique
+  revokedAt        DateTime?
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserDevice {
+  id                String   @id @default(uuid())
+  userId            String
+  deviceFingerprint String
+  ipAddress         String
+  userAgent         String
+  lastActive        DateTime @default(now())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CustomerProfile {
+  id             String            @id @default(uuid())
+  userId         String            @unique
+  passportNo     String?
+  passportExpiry DateTime?
+  panNumber      String?           @unique
+  dob            DateTime?
+  gender         String?
+  nationality    String?
+  occupation     String?
+  annualIncome   Decimal?
+  travelPurpose  String?
+  riskCategory   String            @default("LOW")
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  addresses      CustomerAddress[]
+  banks          CustomerBank[]
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lrsTrackers    LrsLimitTracker[]
+  orders         Order[]
+  Quote          Quote[]
+  kycOverallStatus  String            @default("PENDING")
+  lastKycReviewedAt DateTime?
+  kycCase           KycCase?
+  beneficiaries     Beneficiary[]
+}
+
+model CustomerAddress {
+  id          String          @id @default(uuid())
+  profileId   String
+  pin         String
+  city        String
+  state       String
+  address     String
+  landmark    String?
+  addressType     String          @default("RESIDENTIAL")
+  status          String          @default("ACTIVE")
+  profile         CustomerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  orderDeliveries OrderDelivery[]
+}
+
+model CustomerBank {
+  id            String          @id @default(uuid())
+  profileId     String
+  bankName      String
+  holderName    String
+  accountNumber String
+  ifscCode      String
+  bankAddress   String?
+  status        String          @default("ACTIVE")
+  profile       CustomerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model LrsLimitTracker {
+  id                   String          @id @default(uuid())
+  profileId            String
+  financialYear        String
+  declaredAmountUsd    Decimal         @default(0.00)
+  systemSpentAmountUsd Decimal         @default(0.00)
+  updatedAt            DateTime        @updatedAt
+  profile              CustomerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, financialYear])
+}
+
+model Country {
+  id           String        @id @default(uuid())
+  name         String        @unique
+  iso2         String        @unique
+  iso3         String        @unique
+  nationality  String
+  purposeCodes PurposeCode[]
+}
+
+model Currency {
+  id             String                @id @default(uuid())
+  code           String                @unique
+  name           String
+  symbol         String
+  decimals       Int                   @default(2)
+  isActive       Boolean               @default(true)
+  vaults         BranchVault[]
+  cardTxns       CardTransaction[]
+  cardWallets    CardWallet[]
+  DealerPosition DealerPosition?
+  rates          ExchangeRate?
+  rateHistory    ExchangeRateHistory[]
+  fees           FeeStructure[]
+  InterbankTrade InterbankTrade[]
+  transfers      InventoryTransfer[]
+  orderItems     OrderItem[]
+  Quote          Quote[]
+}
+
+model ForexProduct {
+  id       String      @id @default(uuid())
+  name     String      @unique
+  code     String      @unique
+  isActive Boolean     @default(true)
+  items    OrderItem[]
+}
+
+model ExchangeRateMarginRule {
+  id        String   @id @default(uuid())
+  segment   String   @unique
+  marginPct Float    @default(0.01)
+  updatedAt DateTime @updatedAt
+}
+
+model PurposeCode {
+  id              String           @id @default(uuid())
+  code            String           @unique
+  name            String
+  description     String?
+  lrsApplicable   Boolean          @default(true)
+  countryId       String?
+  complianceRules ComplianceRule[]
+  country         Country?         @relation(fields: [countryId], references: [id])
+}
+
+model ComplianceRule {
+  id                String      @id @default(uuid())
+  purposeCodeId     String
+  ruleName          String
+  conditionJson     Json
+  requiredDocuments String[]
+  action            String      @default("APPROVED")
+  isActive          Boolean     @default(true)
+  purposeCode       PurposeCode @relation(fields: [purposeCodeId], references: [id])
+}
+
+model TaxRule {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  taxType     String
+  percentage  Float    @default(0.0)
+  fixedAmount Decimal  @default(0.00)
+  minAmount   Decimal?
+  maxAmount   Decimal?
+  isActive    Boolean  @default(true)
+}
+
+model FeeStructure {
+  id         String   @id @default(uuid())
+  feeType    String   @unique
+  amount     Decimal
+  currencyId String
+  isActive   Boolean  @default(true)
+  currency   Currency @relation(fields: [currencyId], references: [id])
+}
+
+model DealerPosition {
+  id              String   @id @default(uuid())
+  currencyId      String   @unique
+  netOpenPosition Decimal  @default(0)
+  totalBought     Decimal  @default(0)
+  totalSold       Decimal  @default(0)
+  averageBuyRate  Decimal  @default(0)
+  averageSellRate Decimal  @default(0)
+  lastUpdated     DateTime @updatedAt
+  currency        Currency @relation(fields: [currencyId], references: [id])
+}
+
+model InterbankTrade {
+  id         String   @id @default(uuid())
+  currencyId String
+  tradeType  String
+  amount     Decimal
+  rate       Decimal
+  bankName   String
+  tradeDate  DateTime @default(now())
+  currency   Currency @relation(fields: [currencyId], references: [id])
+}
+
+model BranchVault {
+  id            String              @id @default(uuid())
+  branchId      String
+  currencyId    String
+  totalAmount   Decimal             @default(0.00)
+  updatedAt     DateTime            @updatedAt
+  branch        Branch              @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  currency      Currency            @relation(fields: [currencyId], references: [id])
+  transfersTo   InventoryTransfer[] @relation("DestVault")
+  transfersFrom InventoryTransfer[] @relation("SourceVault")
+  denominations VaultDenomination[]
+  transactions  VaultTransaction[]
+
+  @@unique([branchId, currencyId])
+}
+
+model VaultDenomination {
+  id           String      @id @default(uuid())
+  vaultId      String
+  denomination Int
+  noteCount    Int         @default(0)
+  updatedAt    DateTime    @updatedAt
+  vault        BranchVault @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  @@unique([vaultId, denomination])
+}
+
+model VaultTransaction {
+  id        String      @id @default(uuid())
+  vaultId   String
+  type      String
+  amount    Decimal
+  createdAt DateTime    @default(now())
+  vault     BranchVault @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+}
+
+model InventoryTransfer {
+  id             String         @id @default(uuid())
+  sourceBranchId String
+  destBranchId   String
+  sourceVaultId  String
+  destVaultId    String
+  currencyId     String
+  amount         Decimal
+  status         TransferStatus @default(PENDING)
+  custodianId    String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  currency       Currency       @relation(fields: [currencyId], references: [id])
+  custodian      User           @relation("Custodian", fields: [custodianId], references: [id])
+  destBranch     Branch         @relation("DestBranch", fields: [destBranchId], references: [id])
+  destVault      BranchVault    @relation("DestVault", fields: [destVaultId], references: [id])
+  sourceBranch   Branch         @relation("SourceBranch", fields: [sourceBranchId], references: [id])
+  sourceVault    BranchVault    @relation("SourceVault", fields: [sourceVaultId], references: [id])
+}
+
+model DailyVaultReconciliation {
+  id             String      @id @default(uuid())
+  branchId       String
+  reconciledById String
+  physicalCount  Json
+  systemAmount   Decimal
+  physicalAmount Decimal
+  discrepancy    Decimal     @default(0.00)
+  status         VaultStatus @default(RECONCILED)
+  createdAt      DateTime    @default(now())
+  branch         Branch      @relation(fields: [branchId], references: [id])
+  reconciledBy   User        @relation("Reconciler", fields: [reconciledById], references: [id])
+}
+
+model ExchangeRate {
+  id            String   @id @default(uuid())
+  currencyId    String   @unique
+  inrRate       Float
+  marginBuyPct  Float    @default(0.01)
+  marginSellPct Float    @default(0.01)
+  updatedAt     DateTime @updatedAt
+  currency      Currency @relation(fields: [currencyId], references: [id])
+}
+
+model ExchangeRateHistory {
+  id         String   @id @default(uuid())
+  currencyId String
+  inrRate    Float
+  createdAt  DateTime @default(now())
+  currency   Currency @relation(fields: [currencyId], references: [id])
+}
+
+model ApiProvider {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  apiUrl    String
+  apiKey    String
+  isActive  Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}
+
+model Quote {
+  id            String              @id @default(uuid())
+  quoteNumber   String              @unique
+  profileId     String?
+  currencyId    String
+  lockedInrRate Decimal
+  amountForeign Decimal
+  expiresAt     DateTime
+  createdAt     DateTime            @default(now())
+  sessionId     String?
+  status        QuoteStatus         @default(ACTIVE)
+  orders        Order[]
+  currency      Currency            @relation(fields: [currencyId], references: [id])
+  profile       CustomerProfile?    @relation(fields: [profileId], references: [id])
+  session       TransactionSession? @relation(fields: [sessionId], references: [id])
+}
+
+model TransactionSession {
+  id             String        @id @default(uuid())
+  userId         String?
+  status         SessionStatus @default(CREATED)
+  idempotencyKey String?       @unique
+  draftState     Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  orders         Order[]
+  quotes         Quote[]
+  user           User?         @relation(fields: [userId], references: [id])
+}
+
+model Order {
+  id             String               @id @default(uuid())
+  orderNumber    String               @unique
+  profileId      String
+  branchId       String
+  totalAmountInr Decimal
+  deliveryMethod String
+  status         OrderStatus          @default(PENDING)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  quoteId        String?
+  sessionId      String?
+  invoices       Invoice[]
+  branch         Branch               @relation(fields: [branchId], references: [id])
+  profile        CustomerProfile      @relation(fields: [profileId], references: [id])
+  quote          Quote?               @relation(fields: [quoteId], references: [id])
+  session        TransactionSession?  @relation(fields: [sessionId], references: [id])
+  deliveries     OrderDelivery[]
+  items          OrderItem[]
+  history        OrderStatusHistory[]
+  payments       Payment[]
+  tasks          BranchTask[]
+  assignedStaffId String?
+  assignedAt      DateTime?
+  assignedStaff   User?                @relation("OrderAssignee", fields: [assignedStaffId], references: [id])
+  productType            String               @default("CASH_BUY")
+  workflowType           String               @default("CASH_BUY_FLOW")
+  currentStage           String               @default("KYC_STAGE")
+  requiresKyc            Boolean              @default(true)
+  requiresInventory      Boolean              @default(true)
+  requiresPickupHandover Boolean              @default(false)
+  requiresDelivery       Boolean              @default(false)
+  complianceStatus       String               @default("PENDING")
+  complianceCaseId       String?
+  pickupHandover         PickupHandover?
+  deliveryJob            DeliveryJob?
+  inventoryReservations  InventoryReservation[]
+  travelDestination      String?
+  departureDate          DateTime?
+  returnDate             DateTime?
+  complianceAlerts       ComplianceAlert[]
+  cancelRequested        Boolean              @default(false)
+  cancelReason           String?
+  cashierId              String?
+  deliveryPartnerId      String?
+  fulfillmentStatus      String?
+  cashier                Cashier?             @relation(fields: [cashierId], references: [id])
+  deliveryPartner        DeliveryPartner?     @relation(fields: [deliveryPartnerId], references: [id])
+  cashAllocation         CashAllocation?
+  assignedCentralStaffId String?
+  assignedManagerId      String?
+  currentBranchId        String?
+  originalBranchId       String?
+  reassignedBranchId     String?
+  reassignmentReason     String?
+  reassignedAt           DateTime?
+  reassignedBy           String?
+  complianceLocked       Boolean              @default(false)
+  complianceCompletedAt  DateTime?
+}
+
+model OrderItem {
+  id          String            @id @default(uuid())
+  orderId     String
+  productId   String
+  currencyId  String
+  amount      Decimal
+  rate        Decimal
+  inrSubtotal Decimal
+  currency    Currency          @relation(fields: [currencyId], references: [id])
+  order       Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     ForexProduct      @relation(fields: [productId], references: [id])
+  remittance  RemittanceDetail?
+}
+
+model OrderStatusHistory {
+  id          String      @id @default(uuid())
+  orderId     String
+  status      OrderStatus
+  changedById String
+  comments    String?
+  createdAt   DateTime    @default(now())
+  changedBy   User        @relation("StatusChanger", fields: [changedById], references: [id])
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id            String           @id @default(uuid())
+  orderId       String
+  invoiceNumber String           @unique
+  netAmount     Decimal
+  createdAt     DateTime         @default(now())
+  order         Order            @relation(fields: [orderId], references: [id])
+  items         InvoiceItem[]
+  receipts      InvoiceReceipt[]
+}
+
+model InvoiceItem {
+  id          String  @id @default(uuid())
+  invoiceId   String
+  description String
+  amount      Decimal
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model OrderDelivery {
+  id             String           @id @default(uuid())
+  orderId        String
+  courierPartner String?
+  trackingNumber String?
+  dispatchDate   DateTime?
+  deliveredDate  DateTime?
+  status         String           @default("PENDING")
+  addressId      String?
+  order          Order            @relation(fields: [orderId], references: [id])
+  address        CustomerAddress? @relation(fields: [addressId], references: [id])
+}
+
+model KycDocument {
+  id        String           @id @default(uuid())
+  userId    String
+  docType   String
+  filePath  String
+  status    KycStatus        @default(PENDING)
+  createdAt DateTime         @default(now())
+  ocrData   DocumentOcrData?
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviews   KycReview[]
+}
+
+model DocumentOcrData {
+  id            String      @id @default(uuid())
+  documentId    String      @unique
+  extractedData Json
+  nameMatched   Boolean     @default(false)
+  expiryValid   Boolean     @default(false)
+  ocrConfidence Float       @default(0.0)
+  createdAt     DateTime    @default(now())
+  document      KycDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+}
+
+model KycReview {
+  id         String      @id @default(uuid())
+  documentId String
+  reviewerId String
+  decision   KycStatus
+  notes      String?
+  createdAt  DateTime    @default(now())
+  document   KycDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  reviewer   User        @relation("KycReviewer", fields: [reviewerId], references: [id])
+}
+
+model KycProvider {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  apiUrl    String?
+  apiKey    String?
+  isActive  Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}
+
+model KycVerificationRule {
+  id          String   @id @default(uuid())
+  ruleName    String   @unique
+  description String
+  product     String?  // e.g., 'CASH', 'CARD', 'WIRE' (null means all products)
+  purpose     String?  // e.g., 'TOURISM', 'MEDICAL', 'EDUCATION' (null means all purposes)
+  docType     String   // e.g., 'PAN', 'PASSPORT', 'VISA', 'TICKET'
+  required    Boolean  @default(true)
+  usedFor     String[] // e.g., ['Identity', 'LRS Limits']
+  isActive    Boolean  @default(true)
+}
+
+model RemittanceDetail {
+  id                  String             @id @default(uuid())
+  orderItemId         String             @unique
+  beneficiaryName     String
+  beneficiaryBank     String
+  swiftCode           String
+  ibanOrAccountNumber String
+  beneficiaryAddress  String
+  partnerId           String?
+  beneficiaryId       String?
+  purposeId           String?
+  sourceOfFunds       String?
+  relationship        String?
+  chargeType          String?            @default("OUR")
+  tcsAmount           Decimal?
+  feeAmount           Decimal?
+  paymentMethod       String?            @default("BANK_TRANSFER")
+  forwardedAt         DateTime?
+  forwardedByUserId   String?
+  partnerReference    String?
+  partnerStatus       String?
+  partnerRemarks      String?
+  orderItem           OrderItem          @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  partner             RemittancePartner? @relation(fields: [partnerId], references: [id])
+  beneficiary         Beneficiary?       @relation(fields: [beneficiaryId], references: [id], onDelete: SetNull)
+  purpose             TransferPurpose?   @relation(fields: [purposeId], references: [id], onDelete: SetNull)
+}
+
+model RemittancePartner {
+  id       String             @id @default(uuid())
+  name     String             @unique
+  isActive Boolean            @default(true)
+  details  RemittanceDetail[]
+}
+
+model ForexCard {
+  id           String             @id @default(uuid())
+  userId       String
+  cardNumber   String             @unique
+  cardVendor   String
+  cardStatus   CardStatus         @default(INACTIVE)
+  createdAt    DateTime           @default(now())
+  providerId   String?
+  transactions CardTransaction[]
+  wallets      CardWallet[]
+  provider     ForexCardProvider? @relation(fields: [providerId], references: [id])
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CardWallet {
+  id         String    @id @default(uuid())
+  cardId     String
+  currencyId String
+  balance    Decimal   @default(0.00)
+  updatedAt  DateTime  @updatedAt
+  card       ForexCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  currency   Currency  @relation(fields: [currencyId], references: [id])
+
+  @@unique([cardId, currencyId])
+}
+
+model CardTransaction {
+  id         String    @id @default(uuid())
+  cardId     String
+  amount     Decimal
+  currencyId String
+  merchant   String
+  status     String
+  createdAt  DateTime  @default(now())
+  card       ForexCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  currency   Currency  @relation(fields: [currencyId], references: [id])
+}
+
+model ForexCardProvider {
+  id       String      @id @default(uuid())
+  name     String      @unique
+  isActive Boolean     @default(true)
+  cards    ForexCard[]
+}
+
+model Payment {
+  id         String           @id @default(uuid())
+  orderId    String
+  amount     Decimal
+  currency   String           @default("INR")
+  status     PaymentStatus    @default(PENDING)
+  providerId String
+  createdAt  DateTime         @default(now())
+  order      Order            @relation(fields: [orderId], references: [id])
+  provider   PaymentProvider  @relation(fields: [providerId], references: [id])
+  attempts   PaymentAttempt[]
+  refunds    Refund[]
+}
+
+model PaymentAttempt {
+  id           String        @id @default(uuid())
+  paymentId    String
+  gatewayTxnId String?       @unique
+  status       PaymentStatus
+  rawPayload   Json?
+  createdAt    DateTime      @default(now())
+  payment      Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+}
+
+model PaymentProvider {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  isActive Boolean   @default(true)
+  payments Payment[]
+}
+
+model Refund {
+  id        String        @id @default(uuid())
+  paymentId String
+  refundId  String        @unique
+  amount    Decimal
+  status    PaymentStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  payment   Payment       @relation(fields: [paymentId], references: [id])
+}
+
+model GeneralLedger {
+  id          String         @id @default(uuid())
+  accountName String         @unique
+  balance     Decimal        @default(0.00)
+  updatedAt   DateTime       @updatedAt
+  journals    JournalEntry[]
+}
+
+model JournalEntry {
+  id          String        @id @default(uuid())
+  ledgerId    String
+  type        String
+  amount      Decimal
+  description String
+  createdAt   DateTime      @default(now())
+  ledger      GeneralLedger @relation(fields: [ledgerId], references: [id])
+}
+
+model InvoiceReceipt {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  receiptNo   String   @unique
+  amountPaid  Decimal
+  paymentMode String
+  createdAt   DateTime @default(now())
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+}
+
+model SystemSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  category    String   @default("GENERAL")
+  isEncrypted Boolean  @default(false)
+  description String?
+  updatedById String?
+  updatedAt   DateTime @default(now()) @updatedAt
+}
+
+model Coupon {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  discountPct Float    @default(0.00)
+  maxDiscount Decimal  @default(0.00)
+  expiryDate  DateTime
+  isActive    Boolean  @default(true)
+}
+
+model SupportTicket {
+  id                  String          @id @default(uuid())
+  ticketNumber        String          @unique
+  userId              String
+  subject             String
+  description         String?
+  categoryId          String
+  priority            TicketPriority  @default(MEDIUM)
+  status              TicketStatus    @default(OPEN)
+  department          TicketDepartment @default(SUPPORT)
+  assignedToId        String?
+  
+  responseDue         DateTime?
+  resolutionDue       DateTime?
+  slaBreached         Boolean         @default(false)
+  
+  relatedOrderId      String?
+  relatedCardId       String?
+  relatedRemittanceId String?
+  
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  
+  user                User            @relation("TicketCreator", fields: [userId], references: [id])
+  assignedTo          User?           @relation("TicketAssignee", fields: [assignedToId], references: [id])
+  category            TicketCategory  @relation(fields: [categoryId], references: [id])
+  
+  messages            TicketMessage[]
+  activities          TicketActivity[]
+  attachments         TicketAttachment[]
+  rating              TicketRating?
+  
+  // Implicitly storing relations as strings unless Prisma explicitly complains. 
+  // It's cleaner for now so we don't break Order/Card deletes.
+}
+
+model TicketCategory {
+  id              String             @id @default(uuid())
+  name            String             
+  icon            String?
+  defaultPriority TicketPriority     @default(MEDIUM)
+  department      TicketDepartment   @default(SUPPORT)
+  tickets         SupportTicket[]
+}
+
+model TicketMessage {
+  id          String            @id @default(uuid())
+  ticketId    String
+  senderId    String?           
+  type        TicketMessageType @default(TEXT)
+  message     String
+  createdAt   DateTime          @default(now())
+  
+  ticket      SupportTicket     @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender      User?             @relation(fields: [senderId], references: [id])
+  attachments TicketAttachment[]
+}
+
+model TicketAttachment {
+  id          String          @id @default(uuid())
+  ticketId    String
+  messageId   String?
+  fileUrl     String
+  fileType    String
+  fileName    String
+  createdAt   DateTime        @default(now())
+  
+  ticket      SupportTicket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  message     TicketMessage?  @relation(fields: [messageId], references: [id], onDelete: SetNull)
+}
+
+model TicketActivity {
+  id          String        @id @default(uuid())
+  ticketId    String
+  actorId     String?       
+  action      String        
+  createdAt   DateTime      @default(now())
+  
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actor       User?         @relation(fields: [actorId], references: [id])
+}
+
+model TicketRating {
+  id          String        @id @default(uuid())
+  ticketId    String        @unique
+  rating      Int           
+  comment     String?
+  createdAt   DateTime      @default(now())
+  
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+}
+
+model CmsContent {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  title     String
+  body      String
+  updatedAt DateTime @updatedAt
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  branchId    String
+  category    String
+  amount      Decimal
+  description String?
+  createdAt   DateTime @default(now())
+  branch      Branch   @relation(fields: [branchId], references: [id])
+}
+
+model NotificationQueue {
+  id          String    @id @default(uuid())
+  channel     String
+  recipient   String
+  subject     String?
+  body        String
+  status      String    @default("PENDING")
+  attempts    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+  priority    String    @default("MEDIUM")
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  userId        String?
+  action        String
+  entityName    String?
+  entityId      String?
+  oldData       Json?
+  newData       Json?
+  changedFields Json?
+  ipAddress     String?
+  userAgent     String?
+  actorRoleCode String?
+  branchId      String?
+  createdAt     DateTime @default(now())
+  user          User?    @relation(fields: [userId], references: [id])
+}
+
+model Workflow {
+  id         String              @id @default(uuid())
+  name       String              @unique
+  executions WorkflowExecution[]
+  steps      WorkflowStep[]
+}
+
+model WorkflowStep {
+  id         String              @id @default(uuid())
+  workflowId String
+  stepName   String
+  stepOrder  Int
+  roleId     Int
+  executions WorkflowExecution[]
+  histories  WorkflowHistory[]
+  role       Role                @relation(fields: [roleId], references: [id])
+  workflow   Workflow            @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+}
+
+model WorkflowExecution {
+  id            String            @id @default(uuid())
+  entityType    String
+  entityId      String
+  workflowId    String
+  currentStepId String
+  status        String            @default("IN_PROGRESS")
+  updatedAt     DateTime          @updatedAt
+  currentStep   WorkflowStep      @relation(fields: [currentStepId], references: [id])
+  workflow      Workflow          @relation(fields: [workflowId], references: [id])
+  histories     WorkflowHistory[]
+}
+
+model WorkflowHistory {
+  id            String            @id @default(uuid())
+  executionId   String
+  stepId        String
+  triggeredById String
+  action        String
+  notes         String?
+  createdAt     DateTime          @default(now())
+  execution     WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  step          WorkflowStep      @relation(fields: [stepId], references: [id])
+  triggeredBy   User              @relation("WorkflowActor", fields: [triggeredById], references: [id])
+}
+
+model Approval {
+  id        String         @id @default(uuid())
+  title     String
+  type      String
+  entityId  String
+  status    ApprovalStatus @default(PENDING)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  steps     ApprovalStep[]
+}
+
+model ApprovalStep {
+  id             String         @id @default(uuid())
+  approvalId     String
+  stepOrder      Int
+  assignedRoleId Int
+  status         ApprovalStatus @default(PENDING)
+  actionById     String?
+  notes          String?
+  actedAt        DateTime?
+  actionBy       User?          @relation("ApprovalActor", fields: [actionById], references: [id])
+  approval       Approval       @relation(fields: [approvalId], references: [id], onDelete: Cascade)
+  assignedRole   Role           @relation(fields: [assignedRoleId], references: [id])
+}
+
+model LoginAttempt {
+  id        String   @id @default(uuid())
+  email     String
+  ip        String?
+  device    String?
+  success   Boolean
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+model OtpVerification {
+  id        String   @id @default(uuid())
+  recipient String
+  purpose   String
+  codeHash  String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PhoneVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TrustedDevice {
+  id                String   @id @default(uuid())
+  userId            String
+  deviceFingerprint String
+  trustTokenHash    String   @unique
+  expiresAt         DateTime
+  createdAt         DateTime @default(now())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceFingerprint])
+}
+
+model Testimonial {
+  id           String   @id @default(uuid())
+  customerName String
+  rating       Int      @default(5)
+  reviewText   String
+  location     String?
+  avatarUrl    String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+enum UserType {
+  CUSTOMER
+  STAFF
+}
+
+enum OrderStatus {
+  PENDING
+  KYC_SUBMITTED
+  KYC_APPROVED
+  PAYMENT_PENDING
+  PAYMENT_COMPLETED
+  DISPATCHED
+  DELIVERED
+  COMPLETED
+  CANCELLED
+  REJECTED
+  READY_TO_FORWARD
+  FORWARDED_TO_PARTNER
+  PARTNER_PROCESSING
+  TRANSFER_COMPLETED
+}
+
+enum SessionStatus {
+  CREATED
+  IN_PROGRESS
+  WAITING_LOGIN
+  QUOTE_LOCKED
+  WAITING_PAYMENT
+  PAYMENT_FAILED
+  ABANDONED
+  CONVERTED
+  EXPIRED
+}
+
+enum QuoteStatus {
+  ACTIVE
+  EXPIRED
+  CONVERTED
+}
+
+enum PaymentStatus {
+  PENDING
+  FAILED
+  TIMEOUT
+  SUCCESS
+  REFUNDED
+}
+
+enum KycStatus {
+  PENDING
+  REVIEWING
+  APPROVED
+  REJECTED
+}
+
+enum CardStatus {
+  INACTIVE
+  ACTIVE
+  BLOCKED
+}
+
+enum TicketPriority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum TicketDepartment {
+  SUPPORT
+  COMPLIANCE
+  TREASURY
+  DEALER
+  IT
+  FINANCE
+}
+
+enum TicketMessageType {
+  TEXT
+  ATTACHMENT
+  SYSTEM
+  INTERNAL_NOTE
+}
+
+enum TicketStatus {
+  OPEN
+  WAITING_FOR_CUSTOMER
+  WAITING_FOR_SUPPORT
+  IN_PROGRESS
+  ESCALATED
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+enum VaultStatus {
+  RECONCILED
+  DISCREPANCY
+}
+
+enum TransferStatus {
+  PENDING
+  IN_TRANSIT
+  RECEIVED
+  REJECTED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model BranchTask {
+  id          String     @id @default(uuid())
+  branchId    String
+  orderId     String?
+  taskType    String     // e.g., 'KYC_REVIEW', 'INVENTORY_PREP', 'HANDOVER'
+  status      TaskStatus @default(PENDING)
+  assignedToId String?
+  notes       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  branch      Branch     @relation(fields: [branchId], references: [id])
+  order       Order?     @relation(fields: [orderId], references: [id])
+  assignedTo  User?      @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  queueRoleCode       String?
+  resolvedByUserId    String?
+  dueAt               DateTime?
+  escalatedToUserId   String?
+  escalatedToRoleCode String?
+  metadata            Json?
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  ESCALATED
+}
+
+model BranchInventory {
+  id              String   @id @default(uuid())
+  branchId        String
+  currencyCode    String
+  availableAmount Decimal  @default(0.00)
+  reservedAmount  Decimal  @default(0.00)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  branch          Branch   @relation(fields: [branchId], references: [id])
+
+  @@unique([branchId, currencyCode])
+}
+
+model InventoryReservation {
+  id           String                     @id @default(uuid())
+  branchId     String
+  orderId      String
+  currencyCode String
+  amount       Decimal
+  status       InventoryReservationStatus @default(ACTIVE)
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
+
+  branch       Branch                     @relation(fields: [branchId], references: [id])
+  order        Order                      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+enum InventoryReservationStatus {
+  ACTIVE
+  PARTIALLY_ALLOCATED
+  RELEASED
+  CONSUMED
+  EXPIRED
+  CANCELLED
+}
+
+model InventoryMovement {
+  id           String   @id @default(uuid())
+  branchId     String
+  currencyCode String
+  amount       Decimal
+  direction    String   // IN, OUT
+  movementType String   // e.g., 'ORDER_CONSUMPTION', 'MANUAL_ADJUSTMENT', 'TRANSFER'
+  referenceId  String?
+  createdAt    DateTime @default(now())
+
+  branch       Branch   @relation(fields: [branchId], references: [id])
+}
+
+model PickupHandover {
+  id                          String    @id @default(uuid())
+  orderId                     String    @unique
+  pickupBranchId              String
+  pickupOtpCode               String
+  handoverVerifiedByCashierId String?
+  handoverCompletedAt         DateTime?
+
+  order                       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  pickupBranch                Branch    @relation(fields: [pickupBranchId], references: [id])
+}
+
+model DeliveryJob {
+  id                  String    @id @default(uuid())
+  orderId             String    @unique
+  deliveryAddress     String
+  contactPerson       String
+  dispatchAt          DateTime?
+  deliveryAgent       String?
+  deliveryOtpCode     String?
+  deliveredAt         DateTime?
+  failedAttemptReason String?
+  signatureData       String?   // base64 customer signature captured at delivery
+  photoData           String?   // base64 delivery photo captured at delivery
+  reachedCustomerAt   DateTime? // timestamp when delivery partner reached customer
+
+  order               Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model InAppNotification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  orderId   String?
+  actionUrl String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model KycCase {
+  id               String          @id @default(uuid())
+  profileId        String          @unique
+  status           String          @default("PENDING")
+  reviewerId       String?
+  reviewerNotes    String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  profile          CustomerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model ComplianceAlert {
+  id               String          @id @default(uuid())
+  orderId          String
+  type             String
+  severity         String          @default("WARNING")
+  status           String          @default("OPEN")
+  notes            String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  order            Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Cashier {
+  id           String   @id @default(uuid())
+  name         String
+  employeeCode String   @unique
+  branchId     String
+  status       String   @default("ACTIVE")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  branch       Branch   @relation(fields: [branchId], references: [id])
+  orders       Order[]
+}
+
+model DeliveryPartner {
+  id           String   @id @default(uuid())
+  name         String
+  employeeCode String   @unique
+  branchId     String
+  status       String   @default("ACTIVE")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  branch       Branch   @relation(fields: [branchId], references: [id])
+  orders       Order[]
+}
+
+model CashAllocation {
+  id              String               @id @default(uuid())
+  orderId         String               @unique
+  branchId        String
+  currencyCode    String
+  allocatedAmount Decimal
+  allocatedBy     String
+  allocatedAt     DateTime             @default(now())
+  status          String               @default("PENDING")
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  order           Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  branch          Branch               @relation(fields: [branchId], references: [id])
+  items           CashAllocationItem[]
+}
+
+model CashAllocationItem {
+  id               String         @id @default(uuid())
+  cashAllocationId String
+  denomination     Int
+  quantity         Int
+  amount           Decimal
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  cashAllocation   CashAllocation @relation(fields: [cashAllocationId], references: [id], onDelete: Cascade)
+}
+
+model Beneficiary {
+  id                  String             @id @default(uuid())
+  profileId           String
+  name                String
+  bankName            String
+  swiftCode           String
+  ibanOrAccountNumber String
+  address             String
+  country             String
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  profile             CustomerProfile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  remittances         RemittanceDetail[]
+}
+
+model TransferPurpose {
+  id                  String                       @id @default(uuid())
+  code                String                       @unique
+  name                String
+  description         String
+  tcsRate             Decimal                      @default(0.0)
+  tcsThreshold        Decimal                      @default(700000.0)
+  tcsRateAbove        Decimal                      @default(0.0)
+  tcsRateBelow        Decimal                      @default(0.0)
+  isActive            Boolean                      @default(true)
+  documentRequirements PurposeDocumentRequirement[]
+  remittances          RemittanceDetail[]
+}
+
+model PurposeDocumentRequirement {
+  id                  String                       @id @default(uuid())
+  purposeId           String
+  docType             String
+  required            Boolean                      @default(true)
+  purpose             TransferPurpose              @relation(fields: [purposeId], references: [id], onDelete: Cascade)
+}
+
+model CountryConfiguration {
+  id                  String                       @id @default(uuid())
+  countryCode         String                       @unique
+  countryName         String
+  currencyCode        String
+  isActive            Boolean                      @default(true)
+  feeConfigurations   TransferFeeConfiguration[]
+}
+
+model TransferFeeConfiguration {
+  id                  String                       @id @default(uuid())
+  countryId           String
+  minAmountInr        Decimal                      @default(0.0)
+  maxAmountInr        Decimal                      @default(999999999.0)
+  feeAmountInr        Decimal                      @default(0.0)
+  feePercentage       Decimal                      @default(0.0)
+  country             CountryConfiguration         @relation(fields: [countryId], references: [id], onDelete: Cascade)
+}
+
+model Employee {
+  id                 String         @id @default(uuid())
+  employeeCode       String         @unique
+  name               String
+  phone              String
+  email              String?
+  photoUrl           String?
+  passwordHash       String
+  role               EmployeeRole
+  branchId           String
+  cityId             String?
+  reportingManagerId String?
+  status             EmployeeStatus @default(ACTIVE)
+  mustChangePassword Boolean        @default(true)
+  lastLoginAt        DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  createdBy          String?
+  updatedBy          String?
+
+  branch             Branch         @relation("EmployeeBranchRelation", fields: [branchId], references: [id])
+  managedBranches    Branch[]       @relation("BranchManagerRelation")
+}
+
+model VaultTransfer {
+  id               String   @id @default(uuid())
+  transferNumber   String   @unique
+  sourceBranchId   String
+  destBranchId     String
+  currencyCode     String
+  quantity         Decimal
+  reason           String
+  status           String   @default("APPROVED")
+  requestedById   String
+  approvedById    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  sourceBranch     Branch   @relation("SourceVaultTransfer", fields: [sourceBranchId], references: [id])
+  destBranch       Branch   @relation("DestVaultTransfer", fields: [destBranchId], references: [id])
+}
+
+
+
+enum EmployeeRole {
+  SUPER_ADMIN
+  CENTRAL_STAFF
+  DELIVERY_PARTNER
+  DEALER
+  AUDITOR
+  TREASURY
+  FINANCE
+  BRANCH_MANAGER
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+}
+
