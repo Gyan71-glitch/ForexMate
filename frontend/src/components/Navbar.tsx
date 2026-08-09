@@ -144,13 +144,9 @@ export default function Navbar() {
             Live Rates <span className="flex h-2 w-2 relative ml-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span></span>
           </Link>
           
-          {user ? (
+          {user && (
             <Link href="/dashboard" className="w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center border-2 border-orange-400 hover:bg-orange-600 transition-colors ml-4 shrink-0 shadow-md">
               <span className="font-bold text-sm">{user.fullName.charAt(0).toUpperCase()}</span>
-            </Link>
-          ) : (
-            <Link href="/login" className="hidden lg:flex items-center bg-white/10 border-2 border-white/40 text-white hover:bg-white/20 px-5 py-2 rounded-full text-sm font-extrabold transition-colors ml-4">
-              Log In
             </Link>
           )}
         </div>

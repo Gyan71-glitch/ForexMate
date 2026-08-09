@@ -1,10 +1,14 @@
 {
   "devDependencies": {
+    "concurrently": "^9.2.4",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
     "prettier": "^3.8.4"
   },
   "scripts": {
+    "dev": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run start:dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "dev:backend": "npm run start:dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
     "prepare": "husky"
   }
 }

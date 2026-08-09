@@ -198,9 +198,10 @@ export function PaymentStep() {
         <Button 
           onClick={() => {
             clearSession();
-            window.location.href = '/dashboard';
+            window.scrollTo({ top: 0, behavior: 'instant' });
+            router.push('/dashboard');
           }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3.5 rounded-xl text-base shadow-md"
         >
           Go to Dashboard
         </Button>
@@ -219,8 +220,12 @@ export function PaymentStep() {
           Your order has been placed successfully. You will receive an email confirmation shortly.
         </p>
         <Button 
-          onClick={() => window.location.href = '/dashboard'}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg"
+          onClick={() => {
+            clearSession();
+            window.scrollTo({ top: 0, behavior: 'instant' });
+            router.push('/dashboard');
+          }}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3.5 rounded-xl text-base shadow-md"
         >
           Go to Dashboard
         </Button>
@@ -240,8 +245,12 @@ export function PaymentStep() {
           The order status is currently <span className="font-mono bg-gray-100 px-2 py-0.5 rounded font-bold text-amber-700">PAYMENT_PENDING</span>.
         </p>
         <Button 
-          onClick={() => window.location.href = '/dashboard'}
-          className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3 rounded-lg text-lg"
+          onClick={() => {
+            clearSession();
+            window.scrollTo({ top: 0, behavior: 'instant' });
+            router.push('/dashboard');
+          }}
+          className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-3.5 rounded-xl text-base shadow-md"
         >
           Go to Dashboard
         </Button>

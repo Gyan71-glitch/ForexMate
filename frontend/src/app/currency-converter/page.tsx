@@ -17,34 +17,49 @@ export default function CurrencyConverterPage() {
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
           setRates(data);
-          calculate(amount, 'USD', 'INR', data);
+          
+          // Read URL search params if provided
+          const params = new URLSearchParams(window.location.search);
+          const urlFrom = params.get('from') || 'USD';
+          const urlTo = params.get('to') || 'INR';
+          const urlAmount = params.get('amount') || '100';
+          
+          setFromCurr(urlFrom);
+          setToCurr(urlTo);
+          setAmount(urlAmount);
+          calculate(urlAmount, urlFrom, urlTo, data);
         }
-      });
+      })
+      .catch(err => console.error('Failed to load rates for converter:', err));
   }, []);
 
   const calculate = (amt: string, from: string, to: string, rateData: any[]) => {
-    if (!amt || rateData.length === 0) return;
+    if (!amt || !rateData || rateData.length === 0) return;
     
-    // Everything is stored as rateToInr (e.g. USD inrRate = 83.5)
-    let inrValue = parseFloat(amt);
+    let inrValue = parseFloat(amt) || 0;
+    
+    const getRate = (code: string) => {
+      const found = rateData.find(r => r.currencyCode === code || r.currency?.code === code || r.code === code);
+      return found ? (found.inrRate || found.rate || 0) : 0;
+    };
     
     if (from !== 'INR') {
-      const fromRateObj = rateData.find(r => r.currencyCode === from);
-      if (fromRateObj) {
-        inrValue = parseFloat(amt) * fromRateObj.inrRate;
+      const fromRate = getRate(from);
+      if (fromRate > 0) {
+        inrValue = parseFloat(amt) * fromRate;
       }
     }
     
     let finalValue = inrValue;
     
     if (to !== 'INR') {
-      const toRateObj = rateData.find(r => r.currencyCode === to);
-      if (toRateObj) {
-        finalValue = inrValue / toRateObj.inrRate;
+      const toRate = getRate(to);
+      if (toRate > 0) {
+        finalValue = inrValue / toRate;
       }
     }
     
-    setConverted(finalValue.toFixed(4));
+    setConverted(finalValue.toFixed(2));
   };
 
   const handleSwap = () => {

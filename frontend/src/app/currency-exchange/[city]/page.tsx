@@ -11,19 +11,19 @@ export default async function CityPage({ params }: { params: Promise<{ city: str
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <Navbar />
       <main className="flex-grow">
-        <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white pt-20 pb-40 px-6">
+        <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white pt-24 pb-32 md:pb-40 px-6">
           <div className="max-w-6xl mx-auto text-center">
-            <span className="bg-blue-800 text-blue-100 px-4 py-2 rounded-full text-sm font-bold tracking-widest uppercase mb-6 inline-block">Best Rates in {city}</span>
-            <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">
+            <span className="bg-blue-800/80 text-blue-100 px-4 py-1.5 rounded-full text-xs md:text-sm font-bold tracking-widest uppercase mb-6 inline-block border border-blue-600/40">Best Rates in {city}</span>
+            <h1 className="text-3xl md:text-5xl font-black mb-4 leading-tight">
               Foreign Currency Exchange in <span className="text-orange-400">{city}</span>
             </h1>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+            <p className="text-base md:text-xl text-blue-100 max-w-3xl mx-auto font-medium">
               Get the best foreign exchange rates in {city}. Buy forex online and get same-day doorstep delivery anywhere in {city}.
             </p>
           </div>
         </div>
 
-        <div className="-mt-32 relative z-10 px-6">
+        <div className="-mt-20 md:-mt-28 relative z-10 px-4 sm:px-6">
            <HeroForm />
         </div>
 

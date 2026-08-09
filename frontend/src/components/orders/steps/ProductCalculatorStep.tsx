@@ -5,11 +5,60 @@ import { useQuoteStore } from '@/stores/quoteStore';
 import { useRates } from '@/hooks/useRates';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, MapPin, Calendar, Briefcase, Plus, Edit2, Info, CheckCircle2, Ticket, Globe, Landmark, User2, X, ChevronDown } from 'lucide-react';
+import { ArrowRight, MapPin, Calendar, Briefcase, Plus, Edit2, Info, CheckCircle2, Ticket, Globe, Landmark, User2, X, ChevronDown, Upload, FileText, AlertCircle } from 'lucide-react';
 import { CitySelectorModal } from '../CitySelectorModal';
 import { getActiveBranches } from '@/lib/api-public';
 import { AddressSelector } from '../AddressSelector';
 import API_URL, { authFetch, apiJson } from '@/lib/api';
+
+// ─── Travel Purpose Document Requirements ──────────────────────────────────
+const TRAVEL_PURPOSE_DOCS: Record<string, { label: string; docs: { id: string; name: string; accept: string; required: boolean }[] }> = {
+  TOURISM: {
+    label: 'Leisure / Tourism',
+    docs: [
+      { id: 'flight_ticket', name: 'Confirmed Flight Ticket / Air Itinerary', accept: '.pdf,.jpg,.jpeg,.png', required: true },
+      { id: 'hotel_booking', name: 'Hotel Booking / Accommodation Proof', accept: '.pdf,.jpg,.jpeg,.png', required: false },
+      { id: 'visa_copy', name: 'Valid Tourist Visa Copy', accept: '.pdf,.jpg,.jpeg,.png', required: false }
+    ],
+  },
+  BUSINESS: {
+    label: 'Business Travel',
+    docs: [
+      { id: 'business_invitation', name: 'Business Invitation Letter / Conference Pass', accept: '.pdf,.jpg,.jpeg,.png', required: true },
+      { id: 'business_visa', name: 'Valid Business Visa Copy', accept: '.pdf,.jpg,.jpeg,.png', required: true },
+      { id: 'company_deputation', name: 'Company Deputation Letter', accept: '.pdf,.jpg,.jpeg,.png', required: false }
+    ],
+  },
+  EDUCATION: {
+    label: 'Education Abroad',
+    docs: [
+      { id: 'admission_letter', name: 'University Offer / Admission Letter (I-20 / CAS)', accept: '.pdf,.jpg,.jpeg,.png', required: true },
+      { id: 'student_visa', name: 'Student Visa / Entry Permit Copy', accept: '.pdf,.jpg,.jpeg,.png', required: true },
+      { id: 'fee_invoice', name: 'University Fee Invoice / Demand Letter', accept: '.pdf,.jpg,.jpeg,.png', required: false }
+    ],
+  },
+  MEDICAL: {
+    label: 'Medical Treatment',
+    docs: [
+      { id: 'hospital_letter', name: 'Hospital Appointment / Doctor Invitation Letter', accept: '.pdf,.jpg,.jpeg,.png', required: true },
+      { id: 'doctor_referral', name: 'Doctor Referral / Medical Certificate', accept: '.pdf,.jpg,.jpeg,.png', required: true }
+    ],
+  },
+  EMPLOYMENT: {
+    label: 'Employment Abroad',
+    docs: [
+      { id: 'employment_contract', name: 'Job Offer Letter / Employment Contract', accept: '.pdf,.jpg,.jpeg,.png', required: true },
+      { id: 'work_visa', name: 'Work Permit / Employment Visa Copy', accept: '.pdf,.jpg,.jpeg,.png', required: true }
+    ],
+  },
+  EMIGRATION: {
+    label: 'Emigration',
+    docs: [
+      { id: 'emigration_visa', name: 'Permanent Residency (PR) / Emigration Visa Copy', accept: '.pdf,.jpg,.jpeg,.png', required: true },
+      { id: 'passport_copy', name: 'Passport Copy with Visa Stamp', accept: '.pdf,.jpg,.jpeg,.png', required: true }
+    ],
+  },
+};
 
 // ─── Remittance Types ───────────────────────────────────────────────────────
 interface TransferPurpose {
@@ -75,29 +124,35 @@ export function ProductCalculatorStep() {
     return () => clearInterval(interval);
   }, []);
 
-  // Initialize draft state from URL parameters
+  // Initialize draft state from URL parameters (always sync on searchParams change)
   useEffect(() => {
-    if (sessionId) {
-      const type = searchParams?.get('type');
-      const tab = searchParams?.get('tab');
-      const intent = searchParams?.get('intent');
-      const paramCurrency = searchParams?.get('currency');
-      const paramAmount = searchParams?.get('amount');
+    if (sessionId && searchParams) {
+      const type = searchParams.get('type');
+      const tab = searchParams.get('tab');
+      const intent = searchParams.get('intent');
+      const paramCurrency = searchParams.get('currency');
+      const paramAmount = searchParams.get('amount');
       
       const updates: any = {};
-      if (!draftState.product) {
-        if (tab === 'sell' || intent === 'SELL') {
-          updates.product = 'CASH_SELL';
-        } else if (tab === 'transfer') {
-          updates.product = 'REMITTANCE';
-        } else {
-          updates.product = type === 'notes' ? 'CASH' : type === 'card' ? 'CARD' : 'CASH';
-        }
+      
+      let targetProduct = draftState.product;
+      if (tab === 'sell' || intent === 'SELL') {
+        targetProduct = 'CASH_SELL';
+      } else if (tab === 'transfer' || tab === 'remittance') {
+        targetProduct = 'REMITTANCE';
+      } else if (tab === 'buy' || type) {
+        targetProduct = type === 'card' ? 'CARD' : 'CASH';
+      } else if (!draftState.product) {
+        targetProduct = 'CASH';
       }
-      if (!draftState.currency) {
-        updates.currency = paramCurrency || 'USD';
+      
+      if (targetProduct && targetProduct !== draftState.product) {
+        updates.product = targetProduct;
       }
-      if (!draftState.amount && paramAmount) {
+      if (paramCurrency && paramCurrency.toUpperCase() !== draftState.currency) {
+        updates.currency = paramCurrency.toUpperCase();
+      }
+      if (paramAmount && paramAmount !== draftState.amount) {
         updates.amount = paramAmount;
       }
       
@@ -115,6 +170,16 @@ export function ProductCalculatorStep() {
   const branchId = draftState.branchId || '';
   const deliveryMethod = draftState.deliveryMethod || 'PICKUP';
 
+  const [isKnowMoreOpen, setIsKnowMoreOpen] = useState(false);
+  const [extraCurrencies, setExtraCurrencies] = useState<{ currency: string; amount: string }[]>([]);
+  const [showAddCurrencyModal, setShowAddCurrencyModal] = useState(false);
+  const [newCurrencyCode, setNewCurrencyCode] = useState('EUR');
+  const [newCurrencyAmount, setNewCurrencyAmount] = useState('500');
+
+  const [extraCountries, setExtraCountries] = useState<string[]>([]);
+  const [showAddCountryModal, setShowAddCountryModal] = useState(false);
+  const [selectedExtraCountry, setSelectedExtraCountry] = useState('Europe');
+
   // Travel Details
   const destination = draftState.destination || '';
   const departureDate = draftState.departureDate || '';
@@ -122,6 +187,67 @@ export function ProductCalculatorStep() {
   const noReturnDate = draftState.noReturnDate || false;
   const purpose = draftState.purpose || '';
   const selectedCity = draftState.city || 'Delhi';
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const maxDepartureDateStr = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 60);
+    return d.toISOString().split('T')[0];
+  })();
+
+  const handleDepartureDateChange = (newDept: string) => {
+    const updates: any = { departureDate: newDept };
+    if (returnDate && newDept && returnDate < newDept) {
+      updates.returnDate = newDept;
+    }
+    updateDraft(updates);
+  };
+
+  const handleReturnDateChange = (newReturn: string) => {
+    const minAllowed = departureDate || todayStr;
+    if (newReturn && newReturn < minAllowed) {
+      updateDraft({ returnDate: minAllowed });
+    } else {
+      updateDraft({ returnDate: newReturn });
+    }
+  };
+
+  // Travel Purpose Verification Document Uploads State
+  const [travelPurposeFiles, setTravelPurposeFiles] = useState<Record<string, { name: string; size: number }>>({});
+
+  const handleTravelDocUpload = (docId: string, file: File | null) => {
+    if (!file) return;
+    setTravelPurposeFiles(prev => ({
+      ...prev,
+      [docId]: { name: file.name, size: file.size }
+    }));
+    const currentDocs = draftState.travelDocs || {};
+    updateDraft({
+      travelDocs: {
+        ...currentDocs,
+        [docId]: file.name
+      }
+    });
+  };
+
+  const removeTravelDoc = (docId: string) => {
+    setTravelPurposeFiles(prev => {
+      const copy = { ...prev };
+      delete copy[docId];
+      return copy;
+    });
+    const currentDocs = { ...(draftState.travelDocs || {}) };
+    delete currentDocs[docId];
+    updateDraft({ travelDocs: currentDocs });
+  };
+
+  const triggerDatePicker = (e: React.MouseEvent<HTMLInputElement>) => {
+    try {
+      if ('showPicker' in e.currentTarget) {
+        (e.currentTarget as HTMLInputElement).showPicker();
+      }
+    } catch (_) {}
+  };
 
   // Remittance-specific state
   const [transferPurposes, setTransferPurposes] = useState<TransferPurpose[]>([]);
@@ -239,17 +365,7 @@ export function ProductCalculatorStep() {
         updateDraft(updates);
       }
     }
-    // Pre-fill remittance dates too (not required but referenced by engine)
-    if (product === 'REMITTANCE') {
-      const updates: any = {};
-      if (!draftState.departureDate) {
-        updates.departureDate = new Date().toISOString().split('T')[0];
-      }
-      if (!draftState.purpose) {
-        updates.purpose = 'REMITTANCE';
-      }
-    }
-  }, [product, draftState.departureDate, draftState.purpose]);
+  }, [product]);
 
   const canGetQuote = allowedActions.includes('GET_QUOTE');
   const [isSavingBeneficiary, setIsSavingBeneficiary] = useState(false);
@@ -324,6 +440,9 @@ export function ProductCalculatorStep() {
       alert("Please enter a valid amount.");
       return;
     }
+    if (departureDate && returnDate && returnDate < departureDate) {
+      updateDraft({ returnDate: departureDate });
+    }
     const { sessionId } = useTransactionStore.getState();
     if (!sessionId) return;
     
@@ -342,6 +461,7 @@ export function ProductCalculatorStep() {
     }
     
     await useTransactionStore.getState().fetchWorkflow();
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const getCurrencyName = (code: string) => {
@@ -396,19 +516,65 @@ export function ProductCalculatorStep() {
 
       <div className="relative z-10">
       
+      {/* Product Switcher Tabs (Issue 1 & 2) */}
+      <div className="flex flex-wrap border border-gray-200 mb-6 bg-gray-100/80 p-1.5 rounded-2xl gap-1 shadow-inner">
+        <button
+          type="button"
+          onClick={() => updateDraft({ product: 'CASH' })}
+          className={`flex-1 py-3 px-3 rounded-xl text-xs md:text-sm font-extrabold transition-all flex items-center justify-center gap-2 ${
+            product === 'CASH' ? 'bg-white text-blue-600 shadow-sm border border-gray-200 ring-1 ring-black/5' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+          }`}
+        >
+          <span>💵</span> Buy Notes
+        </button>
+        <button
+          type="button"
+          onClick={() => updateDraft({ product: 'CARD' })}
+          className={`flex-1 py-3 px-3 rounded-xl text-xs md:text-sm font-extrabold transition-all flex items-center justify-center gap-2 ${
+            product === 'CARD' ? 'bg-white text-blue-600 shadow-sm border border-gray-200 ring-1 ring-black/5' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+          }`}
+        >
+          <span>💳</span> Forex Card
+        </button>
+        <button
+          type="button"
+          onClick={() => updateDraft({ product: 'CASH_SELL' })}
+          className={`flex-1 py-3 px-3 rounded-xl text-xs md:text-sm font-extrabold transition-all flex items-center justify-center gap-2 ${
+            product === 'CASH_SELL' ? 'bg-white text-emerald-600 shadow-sm border border-gray-200 ring-1 ring-black/5' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+          }`}
+        >
+          <span>🔄</span> Sell Forex
+        </button>
+        <button
+          type="button"
+          onClick={() => updateDraft({ product: 'REMITTANCE' })}
+          className={`flex-1 py-3 px-3 rounded-xl text-xs md:text-sm font-extrabold transition-all flex items-center justify-center gap-2 ${
+            product === 'REMITTANCE' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200 ring-1 ring-black/5' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+          }`}
+        >
+          <span>🌐</span> Remittance
+        </button>
+      </div>
+
       {/* Top Banner Info */}
-      <div className="mb-6 flex flex-wrap items-center gap-4 text-[13px] font-medium text-gray-700">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 text-[13px] font-medium text-gray-700 bg-gray-50/80 p-3 rounded-xl border border-gray-100">
         <div className="flex items-center">
-          <span className="mr-1 text-lg">🛵</span> Doorstep Delivery by <span className="font-bold text-gray-900 mx-1">{deliveryDay}, 9:00 PM</span> in 
+          <span className="mr-1.5 text-lg">🛵</span> Guaranteed Doorstep Delivery by <span className="font-bold text-gray-900 mx-1">{deliveryDay}, 9:00 PM</span> in 
           <span 
-            className="text-blue-600 font-bold ml-1 cursor-pointer hover:underline"
+            className="text-blue-600 font-bold ml-1 cursor-pointer hover:underline bg-blue-50 px-2 py-0.5 rounded border border-blue-100"
             onClick={() => setIsCityModalOpen(true)}
           >
             {selectedCity} ▾
           </span>
         </div>
-        <div className="flex items-center bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full text-xs font-bold border border-orange-200">
-          <span className="mr-1 opacity-70">⏱</span> {cutoffTimer} <Info className="w-3.5 h-3.5 ml-1 opacity-50" />
+        
+        {/* Cutoff Timer Explanation & Tooltip (Issue 7) */}
+        <div className="flex items-center bg-orange-50 text-orange-700 px-3 py-1 rounded-full text-xs font-bold border border-orange-200/80 shadow-xs relative group cursor-help" title="Order before 1:00 PM for Guaranteed Same-Day Doorstep Delivery">
+          <span className="mr-1.5 opacity-80">⏱ Delivery Cutoff:</span> {cutoffTimer}
+          <Info className="w-3.5 h-3.5 ml-1.5 text-orange-500 opacity-80" />
+          <div className="pointer-events-none absolute right-0 top-full mt-2 w-64 bg-slate-900 text-white text-[11px] font-medium p-3 rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity z-50 leading-relaxed border border-slate-700">
+            ⏰ <strong>Cutoff Policy:</strong> Place your order before 1:00 PM to receive doorstep delivery on the same day. Orders after 1:00 PM are delivered next morning.
+          </div>
         </div>
       </div>
 
@@ -420,7 +586,21 @@ export function ProductCalculatorStep() {
           {/* Required Amount Card */}
           <Card className="shadow-sm border-gray-200 rounded-2xl overflow-hidden">
             <div className="p-6 pb-5">
-              <h2 className="text-[17px] font-bold text-gray-900 mb-5">Required Amount</h2>
+              <h2 className="text-[17px] font-bold text-gray-900 mb-4">Required Amount</h2>
+              
+              {/* Highlight Exchange Rate & Total Conversion Prominently (Issue 6) */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50/50 border border-blue-200/80 rounded-xl p-3.5 mb-5 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Live Interbank Rate:</span>
+                  <span className="text-sm font-black text-blue-700 bg-white px-2.5 py-0.5 rounded-md border border-blue-200/60 shadow-2xs">
+                    1 {currency} = ₹{adjustedRate?.toFixed(2) || '0.00'}
+                  </span>
+                </div>
+                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/90 px-2.5 py-1 rounded-full border border-emerald-200">
+                  ✔ Zero Hidden Charges
+                </span>
+              </div>
               
               <div className="bg-gray-50/70 rounded-xl p-4 border border-gray-100 flex items-center justify-between">
                 <div className="flex items-center gap-4 w-full">
@@ -454,8 +634,27 @@ export function ProductCalculatorStep() {
                 </button>
               </div>
 
+              {/* Additional Currencies List (Issue 8) */}
+              {extraCurrencies.map((c, idx) => (
+                <div key={idx} className="mt-3 bg-blue-50/40 rounded-xl p-3.5 border border-blue-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold text-gray-900 text-sm">{getCurrencyName(c.currency)}</span>
+                    <span className="text-xs font-medium text-gray-600">{c.amount} {c.currency}</span>
+                  </div>
+                  <button 
+                    onClick={() => setExtraCurrencies(prev => prev.filter((_, i) => i !== idx))} 
+                    className="text-red-500 hover:text-red-700 text-xs font-bold"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+
               <div className="mt-5">
-                <button className="text-blue-600 font-bold text-[13px] flex items-center hover:underline">
+                <button 
+                  onClick={() => setShowAddCurrencyModal(true)}
+                  className="text-blue-600 font-bold text-[13px] flex items-center hover:underline"
+                >
                   + Add Another Currency
                 </button>
               </div>
@@ -799,8 +998,11 @@ export function ProductCalculatorStep() {
                         <input
                           type="date"
                           value={departureDate}
-                          onChange={(e) => updateDraft({ departureDate: e.target.value })}
-                          className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm focus:bg-white font-medium"
+                          min={todayStr}
+                          max={maxDepartureDateStr}
+                          onClick={triggerDatePicker}
+                          onChange={(e) => handleDepartureDateChange(e.target.value)}
+                          className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm focus:bg-white font-medium cursor-pointer"
                         />
                       </div>
                       <div>
@@ -808,8 +1010,10 @@ export function ProductCalculatorStep() {
                         <input
                           type="date"
                           value={returnDate}
-                          onChange={(e) => updateDraft({ returnDate: e.target.value })}
-                          className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm focus:bg-white font-medium"
+                          min={departureDate || todayStr}
+                          onClick={triggerDatePicker}
+                          onChange={(e) => handleReturnDateChange(e.target.value)}
+                          className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm focus:bg-white font-medium cursor-pointer"
                         />
                       </div>
                     </div>
@@ -966,62 +1170,77 @@ export function ProductCalculatorStep() {
                     {/* Destination */}
                     <div>
                       <label className="block text-[13px] font-bold text-gray-900 mb-2">Add Travel Destination</label>
-                      <div className="flex flex-wrap gap-3">
-                        {destination ? (
-                          <div className="flex items-center bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full text-[13px] font-medium text-gray-800">
+                      <div className="flex flex-wrap gap-2.5 items-center">
+                        {destination && (
+                          <div className="flex items-center bg-blue-50 border border-blue-200 px-3 py-1 rounded-full text-[13px] font-bold text-blue-900 shadow-2xs">
                             {destination} 
-                            <button onClick={() => updateDraft({ destination: '' })} className="ml-2 text-gray-400 hover:text-gray-700 w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-bold">✕</button>
+                            <button onClick={() => updateDraft({ destination: '' })} className="ml-2 text-gray-400 hover:text-red-600 font-bold text-xs">✕</button>
                           </div>
-                        ) : (
+                        )}
+                        {extraCountries.map((c, idx) => (
+                          <div key={idx} className="flex items-center bg-gray-100 border border-gray-200 px-3 py-1 rounded-full text-[13px] font-semibold text-gray-800">
+                            {c}
+                            <button onClick={() => setExtraCountries(prev => prev.filter((_, i) => i !== idx))} className="ml-2 text-gray-400 hover:text-red-600 font-bold text-xs">✕</button>
+                          </div>
+                        ))}
+                        
+                        {!destination && (
                           <select 
                             value={destination}
                             onChange={(e) => updateDraft({ destination: e.target.value })}
-                            className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-blue-500 outline-none w-48"
+                            className="border border-gray-300 rounded-lg px-3 py-1.5 text-xs font-semibold focus:border-blue-500 outline-none"
                           >
-                            <option value="">Select Country</option>
+                            <option value="">Select Primary Country</option>
                             <option value="Singapore">Singapore</option>
                             <option value="USA">United States</option>
                             <option value="UAE">United Arab Emirates</option>
                             <option value="UK">United Kingdom</option>
                             <option value="Europe">Europe</option>
                             <option value="Thailand">Thailand</option>
+                            <option value="Australia">Australia</option>
                           </select>
                         )}
                         
-                        <button className="border border-gray-200 rounded-lg px-4 py-1.5 text-[11px] font-bold text-gray-700 hover:bg-gray-50 uppercase tracking-wide">
-                          Add Country
+                        <button 
+                          onClick={() => setShowAddCountryModal(true)}
+                          className="border border-gray-300 rounded-lg px-3 py-1.5 text-[11px] font-bold text-blue-600 hover:bg-blue-50 uppercase tracking-wide transition-colors"
+                        >
+                          + Add Country
                         </button>
                       </div>
                     </div>
 
-                    {/* Dates */}
+                    {/* Dates — Fixed Date Inputs & Enforced 60-Day Travel Boundary (Issue 18) */}
                     <div>
                       <label className="block text-[13px] font-bold text-gray-900 mb-2">Add Travel Date</label>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-                        <div className="relative">
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Departure Date *</label>
                           <input 
-                            type={departureDate ? "date" : "text"}
-                            placeholder="DEPARTURE DATE"
+                            type="date"
                             value={departureDate}
-                            onChange={(e) => updateDraft({ departureDate: e.target.value })}
-                            onFocus={(e) => e.target.type = 'date'}
-                            className="border border-gray-100 bg-gray-50 rounded-lg px-4 py-2.5 text-sm focus:border-gray-200 outline-none w-full text-gray-600 uppercase tracking-wider text-[11px] font-bold placeholder:text-gray-400"
+                            min={todayStr}
+                            max={maxDepartureDateStr}
+                            onClick={triggerDatePicker}
+                            onChange={(e) => handleDepartureDateChange(e.target.value)}
+                            className="border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-blue-500 outline-none w-full text-gray-800 font-medium cursor-pointer"
                           />
                         </div>
-                        <div className="relative">
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Return Date</label>
                           <input 
-                            type={returnDate ? "date" : "text"}
-                            placeholder="RETURN DATE"
+                            type="date"
                             value={returnDate}
                             disabled={noReturnDate}
-                            onChange={(e) => updateDraft({ returnDate: e.target.value })}
-                            onFocus={(e) => { if(!noReturnDate) e.target.type = 'date' }}
-                            className={`border border-gray-100 rounded-lg px-4 py-2.5 text-sm focus:border-gray-200 outline-none w-full uppercase tracking-wider text-[11px] font-bold placeholder:text-gray-400 ${noReturnDate ? 'bg-gray-100/50 text-gray-400 cursor-not-allowed' : 'bg-gray-50 text-gray-600'}`}
+                            min={departureDate || todayStr}
+                            onClick={triggerDatePicker}
+                            onChange={(e) => handleReturnDateChange(e.target.value)}
+                            className={`border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-blue-500 outline-none w-full font-medium ${noReturnDate ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'text-gray-800 bg-white cursor-pointer'}`}
                           />
                         </div>
                       </div>
                       <div className="flex flex-col md:flex-row md:items-center justify-between text-[11.5px] text-gray-500 pt-1">
-                        <p>Start date should be within 60 days from order date</p>
+                        <p className="text-orange-700 font-semibold">⚠️ Travel departure date must be within 60 days of order date as per RBI LRS rules.</p>
                         <label className="flex items-center mt-3 md:mt-0 cursor-pointer">
                           <input 
                             type="checkbox" 
@@ -1040,15 +1259,82 @@ export function ProductCalculatorStep() {
                       <select 
                         value={purpose}
                         onChange={(e) => updateDraft({ purpose: e.target.value })}
-                        className="w-full md:w-1/2 border border-gray-100 bg-gray-50 rounded-lg px-4 py-2.5 text-sm focus:border-gray-200 outline-none uppercase tracking-wider text-[11px] font-bold text-gray-500 appearance-none"
+                        className="w-full md:w-1/2 border border-gray-300 bg-white rounded-lg px-4 py-2.5 text-sm focus:border-blue-500 outline-none uppercase font-bold text-gray-800"
                       >
                         <option value="">SELECT PURPOSE</option>
                         <option value="TOURISM">Leisure / Tourism</option>
                         <option value="BUSINESS">Business Travel</option>
-                        <option value="EDUCATION">Education</option>
+                        <option value="EDUCATION">Education Abroad</option>
                         <option value="MEDICAL">Medical Treatment</option>
+                        <option value="EMPLOYMENT">Employment Abroad</option>
+                        <option value="EMIGRATION">Emigration</option>
                       </select>
                     </div>
+
+                    {/* Purpose Verification Document Upload Section */}
+                    {purpose && TRAVEL_PURPOSE_DOCS[purpose] && (
+                      <div className="mt-6 pt-5 border-t border-gray-200 space-y-4 animate-in fade-in duration-300">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="text-sm font-extrabold text-gray-900 flex items-center gap-2">
+                              <span>📎</span> Travel Verification Documents
+                            </h4>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              As per RBI / FEMA compliance, please upload supporting evidence for <strong className="text-gray-900">{TRAVEL_PURPOSE_DOCS[purpose].label}</strong>.
+                            </p>
+                          </div>
+                          <span className="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            RBI Required
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                          {TRAVEL_PURPOSE_DOCS[purpose].docs.map((doc) => {
+                            const attached = travelPurposeFiles[doc.id] || (draftState.travelDocs?.[doc.id] ? { name: draftState.travelDocs[doc.id] } : null);
+                            return (
+                              <div key={doc.id} className={`p-4 rounded-xl border transition-all ${attached ? 'bg-emerald-50/60 border-emerald-300 shadow-2xs' : 'bg-gray-50/80 border-gray-200 hover:border-blue-400 hover:bg-white'}`}>
+                                <div className="flex items-start justify-between mb-2">
+                                  <div>
+                                    <span className="text-xs font-bold text-gray-900 block">
+                                      {doc.name} {doc.required ? <span className="text-red-500 font-bold">*</span> : <span className="text-gray-400 text-[10px] font-normal">(Optional)</span>}
+                                    </span>
+                                    <span className="text-[10px] text-gray-500">PDF, JPG, PNG (Max 10MB)</span>
+                                  </div>
+                                  {attached && <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full">✓ Uploaded</span>}
+                                </div>
+
+                                {attached ? (
+                                  <div className="flex items-center justify-between bg-white p-2.5 rounded-lg border border-emerald-300 text-xs mt-2 shadow-2xs">
+                                    <div className="flex items-center gap-2 overflow-hidden">
+                                      <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
+                                      <span className="font-bold text-gray-800 truncate">{attached.name}</span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeTravelDoc(doc.id)}
+                                      className="text-red-500 hover:text-red-700 font-bold text-xs ml-2 shrink-0"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <label className="flex items-center justify-center gap-2 border border-dashed border-blue-300 bg-blue-50/40 hover:bg-blue-50 hover:border-blue-500 p-2.5 rounded-lg text-xs font-bold text-blue-600 cursor-pointer transition-colors mt-2">
+                                    <Upload className="w-4 h-4 text-blue-600" />
+                                    <span>Choose Document File</span>
+                                    <input
+                                      type="file"
+                                      accept={doc.accept}
+                                      className="hidden"
+                                      onChange={(e) => handleTravelDocUpload(doc.id, e.target.files?.[0] || null)}
+                                    />
+                                  </label>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
 
                   </div>
                 </div>
@@ -1099,7 +1385,12 @@ export function ProductCalculatorStep() {
               <div>
                 <h3 className="font-extrabold text-gray-900 text-[15px] mb-1">{productName}</h3>
                 <p className="text-[11px] text-gray-700 mb-1"><strong>Best</strong> Rates & <strong>Genuine</strong> {product === 'CASH' ? 'Notes' : 'Card'}</p>
-                <a href="#" className="text-blue-500 text-[11px] font-medium hover:underline">Know More</a>
+                <button 
+                  onClick={() => setIsKnowMoreOpen(true)} 
+                  className="text-blue-600 text-[11px] font-bold hover:underline cursor-pointer"
+                >
+                  Know More ➔
+                </button>
               </div>
               <div className="w-14 h-9 bg-green-50 rounded-md border border-green-200/50 flex flex-col justify-center items-center overflow-hidden relative shadow-sm">
                  <div className="absolute inset-0 bg-green-200 opacity-20 pattern-dots"></div>
@@ -1243,6 +1534,135 @@ export function ProductCalculatorStep() {
         onClose={() => setIsCityModalOpen(false)} 
         onSelect={(city) => updateDraft({ city })} 
       />
+
+      {/* Know More Modal (Issue 19) */}
+      {isKnowMoreOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+              <h3 className="font-extrabold text-lg text-gray-900 flex items-center gap-2">
+                <span>✨</span> Product Details & Guarantee
+              </h3>
+              <button onClick={() => setIsKnowMoreOpen(false)} className="text-gray-400 hover:text-gray-700 text-lg font-bold">✕</button>
+            </div>
+            <div className="space-y-3 text-sm text-gray-600 leading-relaxed">
+              <div className="bg-blue-50/70 p-3 rounded-xl border border-blue-100">
+                <p className="font-bold text-blue-900">⚡ Zero Margin Live Exchange</p>
+                <p className="text-xs text-blue-700">Real-time interbank conversion with complete transparency. No hidden commissions or bank markups.</p>
+              </div>
+              <div className="bg-emerald-50/70 p-3 rounded-xl border border-emerald-100">
+                <p className="font-bold text-emerald-900">🛵 Guaranteed Doorstep Delivery</p>
+                <p className="text-xs text-emerald-700">Order by 1:00 PM for same-day home or office delivery across major metro cities.</p>
+              </div>
+              <div className="bg-purple-50/70 p-3 rounded-xl border border-purple-100">
+                <p className="font-bold text-purple-900">🛡️ 100% RBI Regulated & Compliant</p>
+                <p className="text-xs text-purple-700">Fully compliant under RBI Liberalized Remittance Scheme (LRS) and FEMA 1999 guidelines.</p>
+              </div>
+            </div>
+            <Button onClick={() => setIsKnowMoreOpen(false)} className="w-full bg-gray-900 hover:bg-black font-bold text-white py-2.5 rounded-xl">
+              Got It
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Add Currency Modal (Issue 8) */}
+      {showAddCurrencyModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+              <h3 className="font-bold text-base text-gray-900">+ Add Secondary Currency</h3>
+              <button onClick={() => setShowAddCurrencyModal(false)} className="text-gray-400 hover:text-gray-700 font-bold">✕</button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Select Currency</label>
+                <select 
+                  value={newCurrencyCode}
+                  onChange={(e) => setNewCurrencyCode(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm font-semibold text-gray-800"
+                >
+                  <option value="EUR">EUR - Euro</option>
+                  <option value="GBP">GBP - British Pound</option>
+                  <option value="THB">THB - Thai Baht</option>
+                  <option value="AED">AED - UAE Dirham</option>
+                  <option value="SGD">SGD - Singapore Dollar</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Required Amount</label>
+                <input 
+                  type="number"
+                  value={newCurrencyAmount}
+                  onChange={(e) => setNewCurrencyAmount(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm font-bold text-gray-900"
+                  placeholder="e.g. 500"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button 
+                onClick={() => {
+                  if (newCurrencyAmount && Number(newCurrencyAmount) > 0) {
+                    setExtraCurrencies(prev => [...prev, { currency: newCurrencyCode, amount: newCurrencyAmount }]);
+                    setShowAddCurrencyModal(false);
+                  }
+                }}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl"
+              >
+                Add Currency
+              </Button>
+              <Button variant="outline" onClick={() => setShowAddCurrencyModal(false)} className="rounded-xl">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Country Modal (Issue 14) */}
+      {showAddCountryModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+              <h3 className="font-bold text-base text-gray-900">+ Add Destination Country</h3>
+              <button onClick={() => setShowAddCountryModal(false)} className="text-gray-400 hover:text-gray-700 font-bold">✕</button>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1 font-sans">Choose Additional Country</label>
+              <select 
+                value={selectedExtraCountry}
+                onChange={(e) => setSelectedExtraCountry(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-2.5 text-sm font-semibold text-gray-800"
+              >
+                <option value="Europe">Europe (Schengen)</option>
+                <option value="USA">United States</option>
+                <option value="UK">United Kingdom</option>
+                <option value="Singapore">Singapore</option>
+                <option value="UAE">United Arab Emirates</option>
+                <option value="Thailand">Thailand</option>
+                <option value="Australia">Australia</option>
+              </select>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button 
+                onClick={() => {
+                  if (selectedExtraCountry && !extraCountries.includes(selectedExtraCountry)) {
+                    setExtraCountries(prev => [...prev, selectedExtraCountry]);
+                  }
+                  setShowAddCountryModal(false);
+                }}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl"
+              >
+                Add Destination
+              </Button>
+              <Button variant="outline" onClick={() => setShowAddCountryModal(false)} className="rounded-xl">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

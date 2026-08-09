@@ -6,7 +6,8 @@ export function useOrders() {
   return useQuery({
     queryKey: ['orders'],
     queryFn: () => ordersApi.getOrders(),
-    staleTime: 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }
 

@@ -1,1 +1,2 @@
-export declare class CreateAccountingDto {}
+export declare class CreateAccountingDto {
+}

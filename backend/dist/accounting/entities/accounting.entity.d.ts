@@ -1,1 +1,2 @@
-export declare class Accounting {}
+export declare class Accounting {
+}

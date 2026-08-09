@@ -18,7 +18,16 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    if (fullName.trim().length < 2 || fullName.trim().length > 50) {
+      setError("Full name must be between 2 and 50 characters long.");
+      return;
+    }
+
+    const mobileRegex = /^[6-9]\d{9}$/;
+    if (!mobileRegex.test(mobile)) {
+      setError("Please enter a valid 10-digit Indian mobile number (e.g. 9876543210).");
+      return;
+    }
 
     if (password !== repeatPassword) {
       setError("Passwords do not match.");

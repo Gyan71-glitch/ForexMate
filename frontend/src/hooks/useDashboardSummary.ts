@@ -13,13 +13,32 @@ export interface DashboardSummary {
   recentOrders: any[];
 }
 
+const DEFAULT_SUMMARY: DashboardSummary = {
+  totalOrders: 0,
+  activeForexCards: 0,
+  lrsUsage: 0,
+  kycStatus: 'PENDING',
+  pendingOrders: 0,
+  completedOrders: 0,
+  activeQuotes: 0,
+  lastOrderDate: null,
+  recentOrders: []
+};
+
 export function useDashboardSummary() {
   return useQuery<DashboardSummary, Error>({
     queryKey: ['dashboard-summary'],
     queryFn: async () => {
-      const response = await authFetch('/api/v1/dashboard/summary');
-      return apiJson<DashboardSummary>(response);
+      try {
+        const response = await authFetch('/api/v1/dashboard/summary');
+        if (!response.ok) return DEFAULT_SUMMARY;
+        const data = await apiJson<DashboardSummary>(response);
+        return data || DEFAULT_SUMMARY;
+      } catch (err) {
+        return DEFAULT_SUMMARY;
+      }
     },
-    staleTime: 60 * 1000, // Cache for 1 minute
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }

@@ -17,21 +17,26 @@ export default function CurrencyPairPage({ params }: { params: Promise<{ pair: s
     fetch(`${API_URL}/rates`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
+          const getRate = (code: string) => {
+            const found = data.find(r => r.currencyCode === code || r.currency?.code === code || r.code === code);
+            return found ? (found.inrRate || found.rate || 0) : 0;
+          };
+
           let inrValue = 1;
           if (from !== 'INR') {
-            const fObj = data.find(r => r.currencyCode === from);
-            if (fObj) inrValue = fObj.inrRate;
+            const fRate = getRate(from);
+            if (fRate > 0) inrValue = fRate;
           }
           
           let finalRate = inrValue;
           if (to !== 'INR') {
-            const tObj = data.find(r => r.currencyCode === to);
-            if (tObj) finalRate = inrValue / tObj.inrRate;
+            const tRate = getRate(to);
+            if (tRate > 0) finalRate = inrValue / tRate;
           }
           
           setRate(finalRate);
-          setConverted((1 * finalRate).toFixed(4));
+          setConverted((1 * finalRate).toFixed(2));
         }
       });
   }, [from, to]);

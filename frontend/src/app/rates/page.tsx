@@ -19,9 +19,9 @@ export default function RatesPage() {
             .map((item: any) => ({
               currency: item.currency.code,
               name: item.currency.name,
-              buyRate: (item.inrRate * 1.01).toFixed(2), // Simulate buy margin
-              sellRate: (item.inrRate * 0.99).toFixed(2), // Simulate sell margin
-              cardRate: (item.inrRate * 1.005).toFixed(2), // Simulate card margin
+              buyRate: (item.inrRate + 0.63).toFixed(2),
+              sellRate: (item.inrRate - 0.63).toFixed(2),
+              cardRate: item.inrRate.toFixed(2),
               updatedAt: new Date(item.updatedAt).toLocaleString()
             }))
             .sort((a, b) => a.currency.localeCompare(b.currency));
@@ -112,11 +112,23 @@ export default function RatesPage() {
                         <td className="p-4 text-right font-medium text-gray-900">₹{rate.sellRate}</td>
                         <td className="p-4 text-right font-medium text-blue-600">₹{rate.cardRate}</td>
                         <td className="p-4 text-center">
-                          <Link href={`/buy-forex?currency=${rate.currency}`}>
-                            <button className="text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 font-semibold py-1.5 px-4 rounded-md transition-colors">
-                              Book Now
-                            </button>
-                          </Link>
+                          <div className="flex items-center justify-center gap-1.5">
+                            <Link href={`/buy-forex?tab=buy&type=notes&currency=${rate.currency}`}>
+                              <button className="text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-md transition-colors shadow-xs">
+                                Buy
+                              </button>
+                            </Link>
+                            <Link href={`/buy-forex?tab=sell&type=notes&currency=${rate.currency}`}>
+                              <button className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-md transition-colors shadow-xs">
+                                Sell
+                              </button>
+                            </Link>
+                            <Link href={`/buy-forex?tab=buy&type=card&currency=${rate.currency}`}>
+                              <button className="text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-semibold py-1.5 px-2.5 rounded-md transition-colors border border-indigo-200">
+                                Card
+                              </button>
+                            </Link>
+                          </div>
                         </td>
                       </tr>
                     ))

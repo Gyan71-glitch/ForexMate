@@ -1,8 +1,12 @@
+"use client";
+import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 
 export default function TravelInsurancePage() {
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <Navbar />
@@ -51,11 +55,36 @@ export default function TravelInsurancePage() {
                   <div className="flex space-x-4">
                     <div className="flex-1">
                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Start Date</label>
-                      <input type="date" className="w-full border border-gray-300 rounded-xl p-3 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 outline-none" />
+                      <input 
+                        type="date" 
+                        value={startDate}
+                        min={new Date().toISOString().split('T')[0]}
+                        onClick={(e) => { try { (e.target as any).showPicker(); } catch (_) {} }}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setStartDate(val);
+                          if (endDate && val && endDate < val) setEndDate(val);
+                        }}
+                        className="w-full border border-gray-300 rounded-xl p-3 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer" 
+                      />
                     </div>
                     <div className="flex-1">
                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">End Date</label>
-                      <input type="date" className="w-full border border-gray-300 rounded-xl p-3 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 outline-none" />
+                      <input 
+                        type="date" 
+                        value={endDate}
+                        min={startDate || new Date().toISOString().split('T')[0]}
+                        onClick={(e) => { try { (e.target as any).showPicker(); } catch (_) {} }}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (startDate && val && val < startDate) {
+                            setEndDate(startDate);
+                          } else {
+                            setEndDate(val);
+                          }
+                        }}
+                        className="w-full border border-gray-300 rounded-xl p-3 text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer" 
+                      />
                     </div>
                   </div>
                   

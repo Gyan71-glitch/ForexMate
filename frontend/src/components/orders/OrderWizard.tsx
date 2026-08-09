@@ -30,6 +30,13 @@ export function OrderWizard() {
     initSession();
   }, [initSession]);
 
+  // Scroll to top when step status changes
+  useEffect(() => {
+    if (status) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [status]);
+
   // Clean up completed/converted Cash Sell session automatically on mount or state change
   useEffect(() => {
     if (sessionId && (status === 'CONVERTED' || status === 'WAITING_PAYMENT') && draftState.product === 'CASH_SELL') {

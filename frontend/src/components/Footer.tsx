@@ -76,13 +76,13 @@ export default function Footer() {
               <span>Send Money Abroad</span>
             </div>
             <ul className="space-y-2.5">
-              <li><Link href="/transfer-money" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Send Money to USA</Link></li>
-              <li><Link href="/transfer-money" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Send Money to UK</Link></li>
-              <li><Link href="/transfer-money" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Send Money to Canada</Link></li>
-              <li><Link href="/transfer-money" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Send Money to Australia</Link></li>
-              <li><Link href="/transfer-money" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Send Money to Germany</Link></li>
-              <li><Link href="/transfer-money" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Send Money to Singapore</Link></li>
-              <li><Link href="/transfer-money" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Send Money to UAE</Link></li>
+              <li><Link href="/buy-forex?tab=transfer&country=US&currency=USD" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Send Money to USA</Link></li>
+              <li><Link href="/buy-forex?tab=transfer&country=GB&currency=GBP" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Send Money to UK</Link></li>
+              <li><Link href="/buy-forex?tab=transfer&country=CA&currency=CAD" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Send Money to Canada</Link></li>
+              <li><Link href="/buy-forex?tab=transfer&country=AU&currency=AUD" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Send Money to Australia</Link></li>
+              <li><Link href="/buy-forex?tab=transfer&country=DE&currency=EUR" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Send Money to Germany</Link></li>
+              <li><Link href="/buy-forex?tab=transfer&country=SG&currency=SGD" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Send Money to Singapore</Link></li>
+              <li><Link href="/buy-forex?tab=transfer&country=AE&currency=AED" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Send Money to UAE</Link></li>
             </ul>
             
             <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 mt-8">Top Currencies</div>
