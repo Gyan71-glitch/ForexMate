@@ -17,18 +17,16 @@ export default function WorkforceLoginPage() {
   useEffect(() => {
     if (!authLoading && employee) {
       if (employee.mustChangePassword) {
-        router.replace('/workforce/change-password');
+        window.location.href = '/workforce/change-password';
       } else if (employee.role === 'BRANCH_MANAGER') {
-        router.replace('/workforce/manager');
+        window.location.href = '/manager/dashboard';
       } else if (employee.role === 'BRANCH_CASHIER') {
-        router.replace('/workforce/cashier');
+        window.location.href = '/workforce/cashier';
       } else if (employee.role === 'DELIVERY_PARTNER') {
-        router.replace('/workforce/delivery');
-      } else {
-        router.replace('/workforce/login');
+        window.location.href = '/workforce/delivery';
       }
     }
-  }, [employee, authLoading, router]);
+  }, [employee, authLoading]);
 
   // Show loading spinner while auth is being resolved
   if (authLoading) {
@@ -61,16 +59,25 @@ export default function WorkforceLoginPage() {
       setWorkforceToken(access_token);
       login(access_token, employee);
 
+      localStorage.setItem('forexmate_token', access_token);
+      sessionStorage.setItem('forexmate_token', access_token);
+      sessionStorage.setItem('forexmate_user', JSON.stringify({
+        id: employee.id,
+        email: employee.email || `${employee.employeeCode.toLowerCase()}@forexmate.local`,
+        fullName: employee.name,
+        role: employee.role,
+      }));
+
       if (employee.mustChangePassword) {
-        router.replace('/workforce/change-password');
+        window.location.href = '/workforce/change-password';
       } else if (employee.role === 'BRANCH_MANAGER') {
-        router.replace('/workforce/manager');
+        window.location.href = '/manager/dashboard';
       } else if (employee.role === 'BRANCH_CASHIER') {
-        router.replace('/workforce/cashier');
+        window.location.href = '/workforce/cashier';
       } else if (employee.role === 'DELIVERY_PARTNER') {
-        router.replace('/workforce/delivery');
+        window.location.href = '/workforce/delivery';
       } else {
-        router.replace('/workforce/login');
+        window.location.href = '/manager/dashboard';
       }
     } catch (err: any) {
       setError(err.message || 'Invalid credentials. Please try again.');

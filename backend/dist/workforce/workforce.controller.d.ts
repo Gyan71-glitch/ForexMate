@@ -831,7 +831,7 @@ export declare class WorkforceController {
             complianceLocked: boolean;
             complianceCompletedAt: Date | null;
         })[];
-        branchInventory: {
+        branchInventory: never[] | {
             id: string;
             createdAt: Date;
             branchId: string;

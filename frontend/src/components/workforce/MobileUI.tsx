@@ -1,5 +1,6 @@
 "use client";
 import React from 'react';
+import Link from 'next/link';
 
 /* ─── Mobile Bottom Tab Bar ─────────────────────────────────── */
 interface TabItem { id: string; label: string; icon: string; href: string; }
@@ -11,11 +12,11 @@ export function BottomNav({ tabs, active, theme = 'indigo' }: { tabs: TabItem[];
       {tabs.map(tab => {
         const isActive = active === tab.id;
         return (
-          <a key={tab.id} href={tab.href} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 4px 8px', textDecoration: 'none', color: isActive ? color : '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', gap: 3, transition: 'color 0.2s' }}>
+          <Link key={tab.id} href={tab.href} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 4px 8px', textDecoration: 'none', color: isActive ? color : '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', gap: 3, transition: 'color 0.2s' }}>
             <span style={{ fontSize: 22, lineHeight: 1 }}>{tab.icon}</span>
             <span style={{ fontSize: 10, fontWeight: isActive ? 700 : 500, fontFamily: 'inherit', letterSpacing: '0.01em' }}>{tab.label}</span>
             {isActive && <span style={{ width: 4, height: 4, borderRadius: '50%', background: color, marginTop: 1 }} />}
-          </a>
+          </Link>
         );
       })}
     </nav>

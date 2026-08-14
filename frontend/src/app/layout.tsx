@@ -20,8 +20,6 @@ import { SyncListener } from "@/components/SyncListener";
 
 
 
-import AlphaChatBot from "@/components/AlphaChatBot";
-
 export const metadata: Metadata = {
   title: "Forexmate - Premium Foreign Exchange",
   description: "Live Interbank Rates & Same Day Delivery",
@@ -46,7 +44,6 @@ export default function RootLayout({
                 <DevBanner />
                 {children}
                 <DevToolbar />
-                <AlphaChatBot />
                 <Toaster richColors position="top-right" />
               </DevProvider>
             </AuthProvider>

@@ -23,13 +23,25 @@ export default function DeliveryOrdersListPage() {
     if (!authLoading && !employee) router.replace('/workforce/login');
   }, [employee, authLoading, router]);
 
-  useEffect(() => {
+  const fetchOrders = () => {
     if (!employee) return;
     workforceFetch('/orders')
       .then(workforceJson)
       .then((d) => setOrders(d.deliveries || []))
       .catch(console.error)
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchOrders();
+    const interval = setInterval(fetchOrders, 5000);
+    window.addEventListener('forexmate-sync', fetchOrders);
+    window.addEventListener('storage', fetchOrders);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('forexmate-sync', fetchOrders);
+      window.removeEventListener('storage', fetchOrders);
+    };
   }, [employee]);
 
   if (authLoading || loading) return <LoadingScreen message="Loading deliveries..." />;
@@ -57,7 +69,7 @@ export default function DeliveryOrdersListPage() {
           <EmptyState icon="🚚" title="No Deliveries" message="No deliveries match your filter." />
         ) : (
           filtered.map((order: any) => (
-            <OrderCard key={order.id} order={order} onClick={() => router.push(`/workforce/delivery/orders/${order.id}`)} theme="emerald" />
+            <OrderCard key={order.id} order={order} onClick={() => router.push(`/workforce/delivery/orders/${order.orderNumber || order.id}`)} theme="emerald" />
           ))
         )}
       </div>

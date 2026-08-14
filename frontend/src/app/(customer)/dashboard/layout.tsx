@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { InAppNotificationListener } from '@/components/notifications/InAppNotificationListener';
+import AlphaChatBot from '@/components/AlphaChatBot';
 import API_URL, { authFetch } from '@/lib/api';
 import { 
   LayoutDashboard, 
@@ -291,6 +292,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         )}
         
+        {/* AI Agent Assistant - Client Portal Exclusive */}
+        <AlphaChatBot />
       </div>
     </ProtectedRoute>
   );

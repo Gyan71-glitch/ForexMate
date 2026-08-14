@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useWorkforceAuth } from '@/context/WorkforceAuthContext';
 import { workforceFetch, workforceJson } from '@/lib/workforceApi';
 import { BottomNav, OrderCard, LoadingScreen, EmptyState } from '@/components/workforce/MobileUI';
@@ -28,13 +29,25 @@ export default function DeliveryDashboard() {
     }
   }, [employee, authLoading, router]);
 
-  useEffect(() => {
+  const fetchOrders = () => {
     if (!employee) return;
     workforceFetch('/orders')
       .then(workforceJson)
       .then((d) => setOrders(d.deliveries || []))
       .catch(console.error)
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchOrders();
+    const interval = setInterval(fetchOrders, 5000);
+    window.addEventListener('forexmate-sync', fetchOrders);
+    window.addEventListener('storage', fetchOrders);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('forexmate-sync', fetchOrders);
+      window.removeEventListener('storage', fetchOrders);
+    };
   }, [employee]);
 
   if (authLoading || loading) return <LoadingScreen message="Loading your workspace..." />;
@@ -82,11 +95,11 @@ export default function DeliveryDashboard() {
         <div style={{ padding: '20px 16px 0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <p style={{ fontSize: 14, fontWeight: 800, color: '#111827', margin: 0 }}>Assigned Deliveries</p>
-            <a href="/workforce/delivery/orders" style={{ fontSize: 12, color: '#065f46', fontWeight: 700, textDecoration: 'none' }}>See all</a>
+            <Link href="/workforce/delivery/orders" style={{ fontSize: 12, color: '#065f46', fontWeight: 700, textDecoration: 'none' }}>See all</Link>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {pending.slice(0, 3).map((order: any) => (
-              <OrderCard key={order.id} order={order} onClick={() => router.push(`/workforce/delivery/orders/${order.id}`)} theme="emerald" />
+              <OrderCard key={order.id} order={order} onClick={() => router.push(`/workforce/delivery/orders/${order.orderNumber || order.id}`)} theme="emerald" />
             ))}
           </div>
         </div>
@@ -103,13 +116,13 @@ export default function DeliveryDashboard() {
 
 function QuickActionCard({ icon, title, count, color, bg, href }: { icon: string; title: string; count: number | null; color: string; bg: string; href: string }) {
   return (
-    <a href={href} style={{ background: bg, borderRadius: 16, padding: '16px', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <Link href={href} style={{ background: bg, borderRadius: 16, padding: '16px', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <span style={{ fontSize: 28 }}>{icon}</span>
       <div>
         <p style={{ fontSize: 13, fontWeight: 800, color, margin: '0 0 2px' }}>{title}</p>
         {count !== null && <p style={{ fontSize: 11, color, margin: 0, opacity: 0.7, fontWeight: 600 }}>{count} pending</p>}
       </div>
-    </a>
+    </Link>
   );
 }
 

@@ -131,9 +131,9 @@ export default function Footer() {
             <ul className="space-y-2.5">
               <li><Link href="/about" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">About Us</Link></li>
               <li><Link href="/contact" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Contact Us</Link></li>
+              <li><Link href="/staff/login" className="text-indigo-400 hover:text-indigo-300 hover:translate-x-1 transition-all text-xs font-extrabold flex items-center gap-1">🔒 Staff Portal</Link></li>
               <li><Link href="/faqs" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">FAQs</Link></li>
               <li><Link href="/offers" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Current Offers</Link></li>
-              <li><Link href="/careers" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Careers</Link></li>
               <li><Link href="/privacy" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Privacy Policy</Link></li>
               <li><Link href="/terms" className="text-slate-400 hover:text-white hover:translate-x-1 transition-all text-xs font-medium">Terms of Service</Link></li>
             </ul>
