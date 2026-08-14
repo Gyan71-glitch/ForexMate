@@ -56,12 +56,12 @@ export declare class AuthController {
         message: string;
     }>;
     getSessions(req: any): Promise<{
-        city: string | null;
-        country: string | null;
         id: string;
         createdAt: Date;
-        ip: string | null;
         browser: string | null;
+        city: string | null;
+        country: string | null;
+        ip: string | null;
         lastActivity: Date;
         os: string | null;
     }[]>;

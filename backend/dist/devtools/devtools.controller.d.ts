@@ -47,14 +47,14 @@ export declare class DevToolsController {
     } & {
         id: string;
         createdAt: Date;
-        status: string;
-        updatedAt: Date;
         email: string;
         password: string;
         fullName: string | null;
         mobile: string | null;
+        status: string;
         userType: import(".prisma/client").$Enums.UserType;
         roleId: number | null;
+        updatedAt: Date;
         failedAttempts: number;
         isEmailVerified: boolean;
         isPhoneVerified: boolean;
@@ -80,16 +80,16 @@ export declare class DevToolsController {
             ocrData: {
                 id: string;
                 createdAt: Date;
-                extractedData: import("@prisma/client/runtime/library").JsonValue;
                 nameMatched: boolean;
                 expiryValid: boolean;
+                extractedData: import("@prisma/client/runtime/library").JsonValue;
                 ocrConfidence: number;
                 documentId: string;
             } | null;
         } & {
-            userId: string;
             id: string;
             createdAt: Date;
+            userId: string;
             status: import(".prisma/client").$Enums.KycStatus;
             docType: string;
             filePath: string;
@@ -99,7 +99,7 @@ export declare class DevToolsController {
         scenario: string;
     }): Promise<{
         success: boolean;
-        scenario: "PENDING" | "CANCELLED" | "TIMEOUT" | "SUCCESS" | "REFUNDED" | "FAILURE" | "DUPLICATE" | "WEBHOOK_FAILURE";
+        scenario: "CANCELLED" | "PENDING" | "TIMEOUT" | "SUCCESS" | "REFUNDED" | "FAILURE" | "DUPLICATE" | "WEBHOOK_FAILURE";
         orderId: string;
     }>;
     seedPreset(body: {
@@ -155,11 +155,11 @@ export declare class DevToolsController {
             id: string;
             createdAt: Date;
             status: string;
+            attempts: number;
             recipient: string;
             channel: string;
             subject: string | null;
             body: string;
-            attempts: number;
             processedAt: Date | null;
             priority: string;
         }[];
@@ -224,24 +224,24 @@ export declare class DevToolsController {
     getTableRows(tableName: string): Promise<any>;
     getSessionOrder(sessionId: string): Promise<({
         payments: {
-            currency: string;
             id: string;
-            orderId: string;
             createdAt: Date;
             status: import(".prisma/client").$Enums.PaymentStatus;
+            currency: string;
+            orderId: string;
             amount: import("@prisma/client/runtime/library").Decimal;
             providerId: string;
         }[];
     } & {
         id: string;
         createdAt: Date;
-        orderNumber: string;
-        profileId: string;
-        branchId: string;
-        totalAmountInr: import("@prisma/client/runtime/library").Decimal;
-        deliveryMethod: string;
         status: import(".prisma/client").$Enums.OrderStatus;
         updatedAt: Date;
+        branchId: string;
+        orderNumber: string;
+        profileId: string;
+        totalAmountInr: import("@prisma/client/runtime/library").Decimal;
+        deliveryMethod: string;
         quoteId: string | null;
         sessionId: string | null;
         assignedStaffId: string | null;

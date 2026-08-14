@@ -6,7 +6,7 @@ export declare class DevPaymentService {
     constructor(prisma: PrismaService, notificationService: NotificationService);
     mockPayOrder(orderId: string, scenario: string): Promise<{
         success: boolean;
-        scenario: "PENDING" | "CANCELLED" | "TIMEOUT" | "SUCCESS" | "REFUNDED" | "FAILURE" | "DUPLICATE" | "WEBHOOK_FAILURE";
+        scenario: "CANCELLED" | "PENDING" | "TIMEOUT" | "SUCCESS" | "REFUNDED" | "FAILURE" | "DUPLICATE" | "WEBHOOK_FAILURE";
         orderId: string;
     }>;
 }
