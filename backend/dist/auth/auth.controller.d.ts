@@ -1,8 +1,12 @@
 import { AuthService } from './auth.service';
+import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto, RegisterDto, GoogleLoginDto, SendOtpDto, VerifyOtpDto, RequestResetDto, ResetPasswordDto } from './dto/auth.dto';
 export declare class AuthController {
     private authService;
-    constructor(authService: AuthService);
+    private jwtService;
+    private prisma;
+    constructor(authService: AuthService, jwtService: JwtService, prisma: PrismaService);
     private setRefreshCookie;
     private clearRefreshCookie;
     login(dto: LoginDto, ip: string, userAgent: string, res: any): Promise<{
@@ -15,6 +19,7 @@ export declare class AuthController {
         };
     }>;
     staffLogin(dto: LoginDto, ip: string, userAgent: string, res: any): Promise<{
+        workforce_token?: string | undefined;
         access_token: string;
         user: {
             id: string;

@@ -2018,16 +2018,16 @@ export default function BranchOperationsPortal() {
 
       {/* ─── LIVE CAMERA CAPTURE MODAL (MediaDevices API) ──────────────────── */}
       {cameraActiveTarget && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl space-y-4 p-5">
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
               <h3 className="text-sm font-black text-white flex items-center gap-2">
                 <Camera size={18} className="text-indigo-400" />
                 <span>
-                  Capture {cameraActiveTarget === 'CUSTOMER' ? 'Customer Identity Photo' : 'Currency Bundle Photo'}
+                  Capture {cameraActiveTarget === 'CUSTOMER' ? 'Customer Identity Photo' : cameraActiveTarget === 'TREASURY_SLIP' ? 'Treasury / Bank Deposit Slip' : 'Currency Bundle Photo'}
                 </span>
               </h3>
-              <button onClick={() => setCameraActiveTarget(null)} className="text-slate-400 hover:text-white cursor-pointer">
+              <button type="button" onClick={(e) => { e.preventDefault(); setCameraActiveTarget(null); }} className="text-slate-400 hover:text-white cursor-pointer">
                 <X size={18} />
               </button>
             </div>
@@ -2044,21 +2044,24 @@ export default function BranchOperationsPortal() {
             {/* Controls Bar */}
             <div className="flex items-center justify-between gap-3 pt-2">
               <button
-                onClick={toggleCameraFacingMode}
+                type="button"
+                onClick={(e) => { e.preventDefault(); toggleCameraFacingMode(); }}
                 className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer"
               >
                 <SwitchCamera size={14} /> Switch Camera
               </button>
 
               <button
-                onClick={capturePhotoFrame}
+                type="button"
+                onClick={(e) => { e.preventDefault(); capturePhotoFrame(); }}
                 className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-indigo-600/30 cursor-pointer"
               >
                 <Camera size={16} /> Capture Photo
               </button>
 
               <button
-                onClick={() => setCameraActiveTarget(null)}
+                type="button"
+                onClick={(e) => { e.preventDefault(); setCameraActiveTarget(null); }}
                 className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-xl text-xs font-bold cursor-pointer"
               >
                 Cancel
@@ -2083,7 +2086,8 @@ export default function BranchOperationsPortal() {
                 </h3>
               </div>
               <button
-                onClick={() => setShowReceiveInventoryModal(false)}
+                type="button"
+                onClick={(e) => { e.preventDefault(); setShowReceiveInventoryModal(false); }}
                 className="text-slate-400 hover:text-white cursor-pointer"
               >
                 <X size={20} />
@@ -2186,7 +2190,9 @@ export default function BranchOperationsPortal() {
 
                 <div className="flex gap-3 pt-2">
                   <button
-                    onClick={() => {
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
                       if (!receiveAmount || Number(receiveAmount) <= 0 || !receiveReferenceNumber.trim()) {
                         alert('Please fill mandatory Amount and Reference Number fields.');
                         return;
@@ -2231,7 +2237,9 @@ export default function BranchOperationsPortal() {
                       </div>
                     )}
                     <button
-                      onClick={() => {
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
                         setCameraActiveTarget('TREASURY_SLIP');
                         startCameraStream('TREASURY_SLIP', 'environment');
                       }}
@@ -2260,7 +2268,9 @@ export default function BranchOperationsPortal() {
                       </div>
                     )}
                     <button
-                      onClick={() => {
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
                         setCameraActiveTarget('INVENTORY_BUNDLE');
                         startCameraStream('INVENTORY_BUNDLE', 'environment');
                       }}
@@ -2273,13 +2283,16 @@ export default function BranchOperationsPortal() {
 
                 <div className="flex gap-3 pt-2">
                   <button
-                    onClick={() => setReceiveInventoryStep(1)}
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); setReceiveInventoryStep(1); }}
                     className="w-1/3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl cursor-pointer"
                   >
                     ← Back
                   </button>
                   <button
-                    onClick={() => {
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
                       if ((receiveSourceType === 'HQ_TREASURY_TRANSFER' || receiveSourceType === 'COMMERCIAL_BANK_COLLECTION') && !receiveTreasurySlipPhoto) {
                         alert('Treasury Slip photo evidence is required for ' + receiveSourceType.replace(/_/g, ' '));
                         return;
@@ -2334,13 +2347,15 @@ export default function BranchOperationsPortal() {
 
                   <div className="flex gap-3 pt-2">
                     <button
-                      onClick={() => setReceiveInventoryStep(2)}
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setReceiveInventoryStep(2); }}
                       className="w-1/3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl cursor-pointer"
                     >
                       ← Back
                     </button>
                     <button
-                      onClick={() => setReceiveInventoryStep(4)}
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setReceiveInventoryStep(4); }}
                       className="w-2/3 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs rounded-xl shadow-lg cursor-pointer"
                     >
                       Next: Review & Confirm →
@@ -2400,13 +2415,15 @@ export default function BranchOperationsPortal() {
 
                   <div className="flex gap-3 pt-2">
                     <button
-                      onClick={() => setReceiveInventoryStep(3)}
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setReceiveInventoryStep(3); }}
                       className="w-1/3 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl cursor-pointer"
                     >
                       ← Back
                     </button>
                     <button
-                      onClick={submitInventoryReceipt}
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); submitInventoryReceipt(); }}
                       disabled={submittingInventoryReceipt}
                       className="w-2/3 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-lg cursor-pointer flex items-center justify-center gap-2"
                     >

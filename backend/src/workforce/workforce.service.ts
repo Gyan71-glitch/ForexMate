@@ -522,8 +522,8 @@ export class WorkforceService {
     const cashier = await this.prisma.cashier.findUnique({ where: { employeeCode: employee.employeeCode } });
     if (!cashier) throw new UnauthorizedException('No cashier profile found.');
 
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
+    const order = await this.prisma.order.findFirst({
+      where: { OR: [{ id: orderId }, { orderNumber: orderId }] },
       include: {
         pickupHandover: true,
         profile: { include: { user: { select: { id: true, email: true, mobile: true, fullName: true } } } },
@@ -538,7 +538,7 @@ export class WorkforceService {
     // Update order status + pickup handover
     await this.prisma.$transaction(async (tx) => {
       await tx.order.update({
-        where: { id: orderId },
+        where: { id: order.id },
         data: {
           status: 'COMPLETED' as any,
           currentStage: 'COMPLETED',
@@ -548,7 +548,7 @@ export class WorkforceService {
 
       await tx.orderStatusHistory.create({
         data: {
-          orderId,
+          orderId: order.id,
           status: 'COMPLETED' as any,
           changedById: systemUserId,
           comments: `Pickup completed by cashier ${employee.name} (${employee.employeeCode})`,
@@ -557,7 +557,7 @@ export class WorkforceService {
 
       if (order.pickupHandover) {
         await tx.pickupHandover.update({
-          where: { orderId },
+          where: { orderId: order.id },
           data: {
             handoverVerifiedByCashierId: cashier.id,
             handoverCompletedAt: new Date(),
@@ -569,7 +569,7 @@ export class WorkforceService {
         data: {
           action: 'PICKUP_COMPLETED',
           entityName: 'Order',
-          entityId: orderId,
+          entityId: order.id,
           branchId: order.branchId,
           newData: { cashierCode: employee.employeeCode, completedAt: new Date() },
         },
@@ -591,7 +591,7 @@ export class WorkforceService {
     });
 
     this.eventBus.publish('OrderCompleted', {
-      orderId,
+      orderId: order.id,
       branchId: order.branchId,
       userId: order.profileId,
       status: 'COMPLETED',
@@ -608,8 +608,8 @@ export class WorkforceService {
     const cashier = await this.prisma.cashier.findUnique({ where: { employeeCode: employee.employeeCode } });
     if (!cashier) throw new UnauthorizedException('No cashier profile found.');
 
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
+    const order = await this.prisma.order.findFirst({
+      where: { OR: [{ id: orderId }, { orderNumber: orderId }] },
       include: { profile: { include: { user: { select: { id: true, email: true, mobile: true, fullName: true } } } } },
     });
 
@@ -620,7 +620,7 @@ export class WorkforceService {
 
     await this.prisma.$transaction(async (tx) => {
       await tx.order.update({
-        where: { id: orderId },
+        where: { id: order.id },
         data: {
           status: 'COMPLETED' as any,
           currentStage: 'COMPLETED',
@@ -630,7 +630,7 @@ export class WorkforceService {
 
       await tx.orderStatusHistory.create({
         data: {
-          orderId,
+          orderId: order.id,
           status: 'COMPLETED' as any,
           changedById: systemUserId,
           comments: `Cash Sell completed by cashier ${employee.name} (${employee.employeeCode})`,
@@ -641,7 +641,7 @@ export class WorkforceService {
         data: {
           action: 'CASH_SELL_COMPLETED',
           entityName: 'Order',
-          entityId: orderId,
+          entityId: order.id,
           branchId: order.branchId,
           newData: { cashierCode: employee.employeeCode },
         },
@@ -662,7 +662,7 @@ export class WorkforceService {
     });
 
     this.eventBus.publish('OrderCompleted', {
-      orderId,
+      orderId: order.id,
       branchId: order.branchId,
       userId: order.profileId,
       status: 'COMPLETED',
@@ -676,31 +676,44 @@ export class WorkforceService {
     const employee = await this.prisma.employee.findUnique({ where: { id: employeeId } });
     if (!employee) throw new NotFoundException('Employee not found.');
 
-    const dp = await this.prisma.deliveryPartner.findUnique({ where: { employeeCode: employee.employeeCode } });
-    if (!dp) throw new UnauthorizedException('No delivery partner profile found.');
+    const dp = await this.prisma.deliveryPartner.findFirst({
+      where: { OR: [{ employeeCode: employee.employeeCode }, { id: employee.id }] }
+    });
 
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
+    const order = await this.prisma.order.findFirst({
+      where: { OR: [{ id: orderId }, { orderNumber: orderId }] },
       include: { deliveryJob: true },
     });
 
     if (!order) throw new NotFoundException('Order not found.');
-    if (order.deliveryPartnerId !== dp.id) throw new UnauthorizedException('Not assigned to this delivery.');
+
+    const validPartnerIds = [
+      employee.id,
+      employee.employeeCode,
+      ...(dp ? [dp.id, dp.employeeCode] : [])
+    ].filter(Boolean);
+
+    const isAssignedToPartner = order.deliveryPartnerId && validPartnerIds.includes(order.deliveryPartnerId);
+    const isBranchHomeDelivery = (order.branchId === employee.branchId || order.currentBranchId === employee.branchId) && ['HOME_DELIVERY', 'DELIVERY'].includes(order.deliveryMethod);
+
+    if (!isAssignedToPartner && !isBranchHomeDelivery) {
+      throw new UnauthorizedException('Not assigned to this delivery.');
+    }
 
     if (order.deliveryJob) {
       await this.prisma.deliveryJob.update({
-        where: { orderId },
+        where: { orderId: order.id },
         data: { reachedCustomerAt: new Date() },
       });
     }
 
     await this.prisma.order.update({
-      where: { id: orderId },
+      where: { id: order.id },
       data: { currentStage: 'REACHED_CUSTOMER' },
     });
 
     this.eventBus.publish('ReachedCustomer', {
-      orderId,
+      orderId: order.id,
       branchId: order.branchId,
       deliveryPartnerCode: employee.employeeCode,
     });
@@ -712,11 +725,12 @@ export class WorkforceService {
     const employee = await this.prisma.employee.findUnique({ where: { id: employeeId } });
     if (!employee) throw new NotFoundException('Employee not found.');
 
-    const dp = await this.prisma.deliveryPartner.findUnique({ where: { employeeCode: employee.employeeCode } });
-    if (!dp) throw new UnauthorizedException('No delivery partner profile found.');
+    const dp = await this.prisma.deliveryPartner.findFirst({
+      where: { OR: [{ employeeCode: employee.employeeCode }, { id: employee.id }] }
+    });
 
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
+    const order = await this.prisma.order.findFirst({
+      where: { OR: [{ id: orderId }, { orderNumber: orderId }] },
       include: {
         deliveryJob: true,
         profile: { include: { user: { select: { id: true, email: true, mobile: true, fullName: true } } } },
@@ -724,7 +738,19 @@ export class WorkforceService {
     });
 
     if (!order) throw new NotFoundException('Order not found.');
-    if (order.deliveryPartnerId !== dp.id) throw new UnauthorizedException('Not assigned to this delivery.');
+
+    const validPartnerIds = [
+      employee.id,
+      employee.employeeCode,
+      ...(dp ? [dp.id, dp.employeeCode] : [])
+    ].filter(Boolean);
+
+    const isAssignedToPartner = order.deliveryPartnerId && validPartnerIds.includes(order.deliveryPartnerId);
+    const isBranchHomeDelivery = (order.branchId === employee.branchId || order.currentBranchId === employee.branchId) && ['HOME_DELIVERY', 'DELIVERY'].includes(order.deliveryMethod);
+
+    if (!isAssignedToPartner && !isBranchHomeDelivery) {
+      throw new UnauthorizedException('Not assigned to this delivery.');
+    }
 
     if (!dto.signatureData || !dto.photoData) {
       throw new BadRequestException('Both customer signature and delivery photo are required to complete delivery.');
@@ -736,7 +762,7 @@ export class WorkforceService {
       // Store proof in DeliveryJob
       if (order.deliveryJob) {
         await tx.deliveryJob.update({
-          where: { orderId },
+          where: { orderId: order.id },
           data: {
             signatureData: dto.signatureData,
             photoData: dto.photoData,
@@ -746,20 +772,20 @@ export class WorkforceService {
       }
 
       await tx.order.update({
-        where: { id: orderId },
+        where: { id: order.id },
         data: {
-          status: 'DELIVERED' as any,
-          currentStage: 'DELIVERED',
+          status: 'COMPLETED' as any,
+          currentStage: 'COMPLETED',
           fulfillmentStatus: 'DELIVERY_COMPLETED',
         },
       });
 
       await tx.orderStatusHistory.create({
         data: {
-          orderId,
-          status: 'DELIVERED' as any,
+          orderId: order.id,
+          status: 'COMPLETED' as any,
           changedById: systemUserId,
-          comments: `Delivery completed by ${employee.name} (${employee.employeeCode}) with customer signature and photo proof.`,
+          comments: `Delivery completed by partner ${employee.name} (${employee.employeeCode})`,
         },
       });
 
@@ -767,12 +793,13 @@ export class WorkforceService {
         data: {
           action: 'DELIVERY_COMPLETED',
           entityName: 'Order',
-          entityId: orderId,
+          entityId: order.id,
           branchId: order.branchId,
-          newData: { deliveryPartnerCode: employee.employeeCode, proofCaptured: true },
+          newData: { partnerCode: employee.employeeCode, completedAt: new Date() },
         },
       });
 
+      // Notify customer
       const customerContact = order.profile?.user?.mobile || order.profile?.user?.email;
       if (customerContact) {
         await tx.notificationQueue.create({
@@ -780,7 +807,7 @@ export class WorkforceService {
             channel: customerContact.includes('@') ? 'EMAIL' : 'SMS',
             recipient: customerContact,
             subject: 'Delivery Completed ✅',
-            body: `Hi ${order.profile?.user?.fullName || 'Customer'}, your Forexmate order has been successfully delivered. Thank you for choosing Forexmate!`,
+            body: `Hi ${order.profile?.user?.fullName || 'Customer'}, your Forexmate order #${order.orderNumber} has been delivered. Thank you!`,
             priority: 'HIGH',
           },
         });
@@ -1053,8 +1080,8 @@ export class WorkforceService {
       throw new UnauthorizedException('Only a Branch Manager can perform cash denomination allocation');
     }
 
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
+    const order = await this.prisma.order.findFirst({
+      where: { OR: [{ id: orderId }, { orderNumber: orderId }] },
       include: { items: { include: { currency: true } }, cashAllocation: true },
     });
 
@@ -1196,6 +1223,8 @@ export class WorkforceService {
     const lowStockAlerts = branchInventory.filter(inv => Number(inv.availableAmount) < 1000);
 
     return {
+      branch: employee.branch,
+      branchInventory,
       metrics: {
         todayOrdersCount: todayOrders,
         pendingPickupsCount: pendingPickups,

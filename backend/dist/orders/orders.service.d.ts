@@ -29,13 +29,13 @@ export declare class OrdersService {
     create(userId: string, dto: CreateOrderDto): Promise<{
         id: string;
         createdAt: Date;
-        status: import(".prisma/client").$Enums.OrderStatus;
-        updatedAt: Date;
-        branchId: string;
         orderNumber: string;
         profileId: string;
+        branchId: string;
         totalAmountInr: import("@prisma/client/runtime/library").Decimal;
         deliveryMethod: string;
+        status: import(".prisma/client").$Enums.OrderStatus;
+        updatedAt: Date;
         quoteId: string | null;
         sessionId: string | null;
         assignedStaffId: string | null;
@@ -74,9 +74,9 @@ export declare class OrdersService {
         branch: {
             id: string;
             createdAt: Date;
-            email: string | null;
             status: string;
             updatedAt: Date;
+            email: string | null;
             companyId: string;
             branchCode: string;
             branchName: string;
@@ -92,41 +92,24 @@ export declare class OrdersService {
             workingHours: string | null;
             cashLimitInr: import("@prisma/client/runtime/library").Decimal;
         };
-        tasks: {
-            id: string;
-            createdAt: Date;
-            status: import(".prisma/client").$Enums.TaskStatus;
-            updatedAt: Date;
-            branchId: string;
-            orderId: string | null;
-            taskType: string;
-            notes: string | null;
-            queueRoleCode: string | null;
-            resolvedByUserId: string | null;
-            dueAt: Date | null;
-            escalatedToUserId: string | null;
-            escalatedToRoleCode: string | null;
-            metadata: import("@prisma/client/runtime/library").JsonValue | null;
-            assignedToId: string | null;
-        }[];
         quote: ({
             currency: {
                 symbol: string;
                 id: string;
                 name: string;
-                isActive: boolean;
                 code: string;
+                isActive: boolean;
                 decimals: number;
             };
         } & {
             id: string;
             createdAt: Date;
-            expiresAt: Date;
-            status: import(".prisma/client").$Enums.QuoteStatus;
             profileId: string | null;
+            status: import(".prisma/client").$Enums.QuoteStatus;
             sessionId: string | null;
-            quoteNumber: string;
+            expiresAt: Date;
             currencyId: string;
+            quoteNumber: string;
             lockedInrRate: import("@prisma/client/runtime/library").Decimal;
             amountForeign: import("@prisma/client/runtime/library").Decimal;
         }) | null;
@@ -135,33 +118,50 @@ export declare class OrdersService {
                 symbol: string;
                 id: string;
                 name: string;
-                isActive: boolean;
                 code: string;
+                isActive: boolean;
                 decimals: number;
             };
             product: {
                 id: string;
                 name: string;
-                isActive: boolean;
                 code: string;
+                isActive: boolean;
             };
         } & {
             id: string;
             orderId: string;
-            currencyId: string;
             amount: import("@prisma/client/runtime/library").Decimal;
             rate: import("@prisma/client/runtime/library").Decimal;
             inrSubtotal: import("@prisma/client/runtime/library").Decimal;
             productId: string;
+            currencyId: string;
         })[];
+        tasks: {
+            id: string;
+            orderId: string | null;
+            createdAt: Date;
+            branchId: string;
+            status: import(".prisma/client").$Enums.TaskStatus;
+            updatedAt: Date;
+            taskType: string;
+            assignedToId: string | null;
+            notes: string | null;
+            queueRoleCode: string | null;
+            resolvedByUserId: string | null;
+            dueAt: Date | null;
+            escalatedToUserId: string | null;
+            escalatedToRoleCode: string | null;
+            metadata: import("@prisma/client/runtime/library").JsonValue | null;
+        }[];
         id: string;
         createdAt: Date;
-        updatedAt: Date;
-        branchId: string;
         orderNumber: string;
         profileId: string;
+        branchId: string;
         totalAmountInr: import("@prisma/client/runtime/library").Decimal;
         deliveryMethod: string;
+        updatedAt: Date;
         quoteId: string | null;
         sessionId: string | null;
         assignedStaffId: string | null;
@@ -200,9 +200,9 @@ export declare class OrdersService {
         branch: {
             id: string;
             createdAt: Date;
-            email: string | null;
             status: string;
             updatedAt: Date;
+            email: string | null;
             companyId: string;
             branchCode: string;
             branchName: string;
@@ -218,41 +218,24 @@ export declare class OrdersService {
             workingHours: string | null;
             cashLimitInr: import("@prisma/client/runtime/library").Decimal;
         };
-        tasks: {
-            id: string;
-            createdAt: Date;
-            status: import(".prisma/client").$Enums.TaskStatus;
-            updatedAt: Date;
-            branchId: string;
-            orderId: string | null;
-            taskType: string;
-            notes: string | null;
-            queueRoleCode: string | null;
-            resolvedByUserId: string | null;
-            dueAt: Date | null;
-            escalatedToUserId: string | null;
-            escalatedToRoleCode: string | null;
-            metadata: import("@prisma/client/runtime/library").JsonValue | null;
-            assignedToId: string | null;
-        }[];
         quote: ({
             currency: {
                 symbol: string;
                 id: string;
                 name: string;
-                isActive: boolean;
                 code: string;
+                isActive: boolean;
                 decimals: number;
             };
         } & {
             id: string;
             createdAt: Date;
-            expiresAt: Date;
-            status: import(".prisma/client").$Enums.QuoteStatus;
             profileId: string | null;
+            status: import(".prisma/client").$Enums.QuoteStatus;
             sessionId: string | null;
-            quoteNumber: string;
+            expiresAt: Date;
             currencyId: string;
+            quoteNumber: string;
             lockedInrRate: import("@prisma/client/runtime/library").Decimal;
             amountForeign: import("@prisma/client/runtime/library").Decimal;
         }) | null;
@@ -261,41 +244,58 @@ export declare class OrdersService {
                 symbol: string;
                 id: string;
                 name: string;
-                isActive: boolean;
                 code: string;
+                isActive: boolean;
                 decimals: number;
             };
             product: {
                 id: string;
                 name: string;
-                isActive: boolean;
                 code: string;
+                isActive: boolean;
             };
         } & {
             id: string;
             orderId: string;
-            currencyId: string;
             amount: import("@prisma/client/runtime/library").Decimal;
             rate: import("@prisma/client/runtime/library").Decimal;
             inrSubtotal: import("@prisma/client/runtime/library").Decimal;
             productId: string;
+            currencyId: string;
         })[];
         history: {
             id: string;
+            orderId: string;
             createdAt: Date;
             status: import(".prisma/client").$Enums.OrderStatus;
-            orderId: string;
-            changedById: string;
             comments: string | null;
+            changedById: string;
+        }[];
+        tasks: {
+            id: string;
+            orderId: string | null;
+            createdAt: Date;
+            branchId: string;
+            status: import(".prisma/client").$Enums.TaskStatus;
+            updatedAt: Date;
+            taskType: string;
+            assignedToId: string | null;
+            notes: string | null;
+            queueRoleCode: string | null;
+            resolvedByUserId: string | null;
+            dueAt: Date | null;
+            escalatedToUserId: string | null;
+            escalatedToRoleCode: string | null;
+            metadata: import("@prisma/client/runtime/library").JsonValue | null;
         }[];
         id: string;
         createdAt: Date;
-        updatedAt: Date;
-        branchId: string;
         orderNumber: string;
         profileId: string;
+        branchId: string;
         totalAmountInr: import("@prisma/client/runtime/library").Decimal;
         deliveryMethod: string;
+        updatedAt: Date;
         quoteId: string | null;
         sessionId: string | null;
         assignedStaffId: string | null;
@@ -331,13 +331,13 @@ export declare class OrdersService {
     updateStatus(orderId: string, status: any): Promise<{
         id: string;
         createdAt: Date;
-        status: import(".prisma/client").$Enums.OrderStatus;
-        updatedAt: Date;
-        branchId: string;
         orderNumber: string;
         profileId: string;
+        branchId: string;
         totalAmountInr: import("@prisma/client/runtime/library").Decimal;
         deliveryMethod: string;
+        status: import(".prisma/client").$Enums.OrderStatus;
+        updatedAt: Date;
         quoteId: string | null;
         sessionId: string | null;
         assignedStaffId: string | null;
@@ -375,12 +375,12 @@ export declare class OrdersService {
         status: string;
         id: string;
         createdAt: Date;
-        updatedAt: Date;
-        branchId: string;
         orderNumber: string;
         profileId: string;
+        branchId: string;
         totalAmountInr: import("@prisma/client/runtime/library").Decimal;
         deliveryMethod: string;
+        updatedAt: Date;
         quoteId: string | null;
         sessionId: string | null;
         assignedStaffId: string | null;

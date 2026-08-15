@@ -16,6 +16,8 @@ import {
   Param,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from '../prisma/prisma.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import {
   ApiTags,
@@ -37,7 +39,11 @@ import {
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private jwtService: JwtService,
+    private prisma: PrismaService,
+  ) {}
 
   private setRefreshCookie(res: any, token: string) {
     res.cookie('refresh_token', token, {
@@ -93,16 +99,45 @@ export class AuthController {
       'SUPER_ADMIN', 'ADMIN', 'OPERATIONS_ADMIN', 'COMPLIANCE_ADMIN', 
       'STAFF', 'BRANCH_OPERATIONS', 'COMPLIANCE', 'DEALER', 'ACCOUNTANT',
       'AGENT', 'TELLER', 'BRANCH_KYC_STAFF', 'BRANCH_INVENTORY_STAFF',
-      'BRANCH_FULFILLMENT_STAFF', 'BRANCH_CASHIER'
+      'BRANCH_FULFILLMENT_STAFF', 'BRANCH_CASHIER', 'BRANCH_MANAGER'
     ];
     
     if (!staffRoles.includes(result.user.role)) {
       throw new UnauthorizedException('You do not have staff permissions.');
     }
     this.setRefreshCookie(res, result.refresh_token);
+
+    // For BRANCH_MANAGER: also generate a workforce JWT from their linked Employee record
+    let workforce_token: string | null = null;
+    if (result.user.role === 'BRANCH_MANAGER') {
+      // Find linked Employee record by email match or branchStaff association
+      const employee = await this.prisma.employee.findFirst({
+        where: {
+          OR: [
+            { email: dto.email?.toLowerCase() },
+            { role: 'BRANCH_MANAGER' as any, status: 'ACTIVE' },
+          ],
+        },
+        include: { branch: true },
+      });
+      if (employee) {
+        workforce_token = this.jwtService.sign(
+          {
+            sub: employee.id,
+            employeeCode: employee.employeeCode,
+            role: employee.role,
+            branchId: employee.branchId,
+            type: 'WORKFORCE',
+          },
+          { expiresIn: '12h' },
+        );
+      }
+    }
+
     return {
       access_token: result.access_token,
       user: result.user,
+      ...(workforce_token ? { workforce_token } : {}),
     };
   }
 

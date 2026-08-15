@@ -153,24 +153,24 @@ export declare class WorkforceController {
                     symbol: string;
                     id: string;
                     name: string;
-                    isActive: boolean;
                     code: string;
                     decimals: number;
+                    isActive: boolean;
                 };
                 product: {
                     id: string;
                     name: string;
-                    isActive: boolean;
                     code: string;
+                    isActive: boolean;
                 };
             } & {
                 id: string;
                 orderId: string;
+                productId: string;
                 currencyId: string;
                 amount: import("@prisma/client/runtime/library").Decimal;
                 rate: import("@prisma/client/runtime/library").Decimal;
                 inrSubtotal: import("@prisma/client/runtime/library").Decimal;
-                productId: string;
             })[];
         } & {
             id: string;
@@ -306,24 +306,24 @@ export declare class WorkforceController {
                     symbol: string;
                     id: string;
                     name: string;
-                    isActive: boolean;
                     code: string;
                     decimals: number;
+                    isActive: boolean;
                 };
                 product: {
                     id: string;
                     name: string;
-                    isActive: boolean;
                     code: string;
+                    isActive: boolean;
                 };
             } & {
                 id: string;
                 orderId: string;
+                productId: string;
                 currencyId: string;
                 amount: import("@prisma/client/runtime/library").Decimal;
                 rate: import("@prisma/client/runtime/library").Decimal;
                 inrSubtotal: import("@prisma/client/runtime/library").Decimal;
-                productId: string;
             })[];
         } & {
             id: string;
@@ -464,24 +464,24 @@ export declare class WorkforceController {
                     symbol: string;
                     id: string;
                     name: string;
-                    isActive: boolean;
                     code: string;
                     decimals: number;
+                    isActive: boolean;
                 };
                 product: {
                     id: string;
                     name: string;
-                    isActive: boolean;
                     code: string;
+                    isActive: boolean;
                 };
             } & {
                 id: string;
                 orderId: string;
+                productId: string;
                 currencyId: string;
                 amount: import("@prisma/client/runtime/library").Decimal;
                 rate: import("@prisma/client/runtime/library").Decimal;
                 inrSubtotal: import("@prisma/client/runtime/library").Decimal;
-                productId: string;
             })[];
         } & {
             id: string;
@@ -617,24 +617,24 @@ export declare class WorkforceController {
                     symbol: string;
                     id: string;
                     name: string;
-                    isActive: boolean;
                     code: string;
                     decimals: number;
+                    isActive: boolean;
                 };
                 product: {
                     id: string;
                     name: string;
-                    isActive: boolean;
                     code: string;
+                    isActive: boolean;
                 };
             } & {
                 id: string;
                 orderId: string;
+                productId: string;
                 currencyId: string;
                 amount: import("@prisma/client/runtime/library").Decimal;
                 rate: import("@prisma/client/runtime/library").Decimal;
                 inrSubtotal: import("@prisma/client/runtime/library").Decimal;
-                productId: string;
             })[];
         } & {
             id: string;
@@ -770,24 +770,24 @@ export declare class WorkforceController {
                     symbol: string;
                     id: string;
                     name: string;
-                    isActive: boolean;
                     code: string;
                     decimals: number;
+                    isActive: boolean;
                 };
                 product: {
                     id: string;
                     name: string;
-                    isActive: boolean;
                     code: string;
+                    isActive: boolean;
                 };
             } & {
                 id: string;
                 orderId: string;
+                productId: string;
                 currencyId: string;
                 amount: import("@prisma/client/runtime/library").Decimal;
                 rate: import("@prisma/client/runtime/library").Decimal;
                 inrSubtotal: import("@prisma/client/runtime/library").Decimal;
-                productId: string;
             })[];
         } & {
             id: string;
@@ -965,24 +965,24 @@ export declare class WorkforceController {
                     symbol: string;
                     id: string;
                     name: string;
-                    isActive: boolean;
                     code: string;
                     decimals: number;
+                    isActive: boolean;
                 };
                 product: {
                     id: string;
                     name: string;
-                    isActive: boolean;
                     code: string;
+                    isActive: boolean;
                 };
             } & {
                 id: string;
                 orderId: string;
+                productId: string;
                 currencyId: string;
                 amount: import("@prisma/client/runtime/library").Decimal;
                 rate: import("@prisma/client/runtime/library").Decimal;
                 inrSubtotal: import("@prisma/client/runtime/library").Decimal;
-                productId: string;
             })[];
         } & {
             id: string;
@@ -1131,24 +1131,24 @@ export declare class WorkforceController {
                 symbol: string;
                 id: string;
                 name: string;
-                isActive: boolean;
                 code: string;
                 decimals: number;
+                isActive: boolean;
             };
             product: {
                 id: string;
                 name: string;
-                isActive: boolean;
                 code: string;
+                isActive: boolean;
             };
         } & {
             id: string;
             orderId: string;
+            productId: string;
             currencyId: string;
             amount: import("@prisma/client/runtime/library").Decimal;
             rate: import("@prisma/client/runtime/library").Decimal;
             inrSubtotal: import("@prisma/client/runtime/library").Decimal;
-            productId: string;
         })[];
     } & {
         id: string;
@@ -1326,24 +1326,24 @@ export declare class WorkforceController {
                 symbol: string;
                 id: string;
                 name: string;
-                isActive: boolean;
                 code: string;
                 decimals: number;
+                isActive: boolean;
             };
             product: {
                 id: string;
                 name: string;
-                isActive: boolean;
                 code: string;
+                isActive: boolean;
             };
         } & {
             id: string;
             orderId: string;
+            productId: string;
             currencyId: string;
             amount: import("@prisma/client/runtime/library").Decimal;
             rate: import("@prisma/client/runtime/library").Decimal;
             inrSubtotal: import("@prisma/client/runtime/library").Decimal;
-            productId: string;
         })[];
     } & {
         id: string;
@@ -1563,6 +1563,36 @@ export declare class WorkforceController {
         allocatedAt: Date;
     }>;
     getManagerDashboard(req: any): Promise<{
+        branch: {
+            id: string;
+            createdAt: Date;
+            email: string | null;
+            status: string;
+            updatedAt: Date;
+            companyId: string;
+            branchCode: string;
+            branchName: string;
+            branchAddress: string;
+            branchCity: string;
+            cityId: string | null;
+            managerId: string | null;
+            branchType: string;
+            lat: number | null;
+            lng: number | null;
+            phone: string | null;
+            vaultCapacity: import("@prisma/client/runtime/library").Decimal;
+            workingHours: string | null;
+            cashLimitInr: import("@prisma/client/runtime/library").Decimal;
+        };
+        branchInventory: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            branchId: string;
+            currencyCode: string;
+            availableAmount: import("@prisma/client/runtime/library").Decimal;
+            reservedAmount: import("@prisma/client/runtime/library").Decimal;
+        }[];
         metrics: {
             todayOrdersCount: number;
             pendingPickupsCount: number;

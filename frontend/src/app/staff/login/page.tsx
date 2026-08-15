@@ -89,12 +89,23 @@ export default function DedicatedStaffLoginPage() {
         credentials: 'include',
       });
 
-      const payload = await apiJson<{ access_token: string; user: { id: string; email: string; fullName: string; role: string } }>(res);
+      const payload = await apiJson<{ access_token: string; workforce_token?: string; user: { id: string; email: string; fullName: string; role: string } }>(res);
 
       adminAuthLogin(payload.access_token, payload.user);
       localStorage.setItem('forexmate_token', payload.access_token);
       sessionStorage.setItem('forexmate_token', payload.access_token);
       sessionStorage.setItem('forexmate_user', JSON.stringify(payload.user));
+
+      // If backend returned a workforce_token (for BRANCH_MANAGER), store it for the manager dashboard
+      if (payload.workforce_token) {
+        setWorkforceToken(payload.workforce_token);
+        workforceLogin(payload.workforce_token, {
+          id: payload.user.id,
+          name: payload.user.fullName,
+          role: payload.user.role,
+          employeeCode: '',
+        });
+      }
 
       if (payload.user.role === 'ADMIN' || payload.user.role === 'SUPER_ADMIN') {
         window.location.href = '/admin';

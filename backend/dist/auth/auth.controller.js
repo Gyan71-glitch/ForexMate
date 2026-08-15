@@ -15,13 +15,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
+const jwt_1 = require("@nestjs/jwt");
+const prisma_service_1 = require("../prisma/prisma.service");
 const jwt_auth_guard_1 = require("./jwt-auth.guard");
 const swagger_1 = require("@nestjs/swagger");
 const auth_dto_1 = require("./dto/auth.dto");
 let AuthController = class AuthController {
     authService;
-    constructor(authService) {
+    jwtService;
+    prisma;
+    constructor(authService, jwtService, prisma) {
         this.authService = authService;
+        this.jwtService = jwtService;
+        this.prisma = prisma;
     }
     setRefreshCookie(res, token) {
         res.cookie('refresh_token', token, {
@@ -54,15 +60,37 @@ let AuthController = class AuthController {
             'SUPER_ADMIN', 'ADMIN', 'OPERATIONS_ADMIN', 'COMPLIANCE_ADMIN',
             'STAFF', 'BRANCH_OPERATIONS', 'COMPLIANCE', 'DEALER', 'ACCOUNTANT',
             'AGENT', 'TELLER', 'BRANCH_KYC_STAFF', 'BRANCH_INVENTORY_STAFF',
-            'BRANCH_FULFILLMENT_STAFF', 'BRANCH_CASHIER'
+            'BRANCH_FULFILLMENT_STAFF', 'BRANCH_CASHIER', 'BRANCH_MANAGER'
         ];
         if (!staffRoles.includes(result.user.role)) {
             throw new common_1.UnauthorizedException('You do not have staff permissions.');
         }
         this.setRefreshCookie(res, result.refresh_token);
+        let workforce_token = null;
+        if (result.user.role === 'BRANCH_MANAGER') {
+            const employee = await this.prisma.employee.findFirst({
+                where: {
+                    OR: [
+                        { email: dto.email?.toLowerCase() },
+                        { role: 'BRANCH_MANAGER', status: 'ACTIVE' },
+                    ],
+                },
+                include: { branch: true },
+            });
+            if (employee) {
+                workforce_token = this.jwtService.sign({
+                    sub: employee.id,
+                    employeeCode: employee.employeeCode,
+                    role: employee.role,
+                    branchId: employee.branchId,
+                    type: 'WORKFORCE',
+                }, { expiresIn: '12h' });
+            }
+        }
         return {
             access_token: result.access_token,
             user: result.user,
+            ...(workforce_token ? { workforce_token } : {}),
         };
     }
     async register(dto) {
@@ -265,6 +293,8 @@ __decorate([
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('Authentication'),
     (0, common_1.Controller)('auth'),
-    __metadata("design:paramtypes", [auth_service_1.AuthService])
+    __metadata("design:paramtypes", [auth_service_1.AuthService,
+        jwt_1.JwtService,
+        prisma_service_1.PrismaService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map
