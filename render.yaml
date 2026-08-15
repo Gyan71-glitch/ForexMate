@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: forexmate-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://neondb_owner:npg_Cydz4G3inBTa@ep-summer-brook-aoa67ux6-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+      - key: JWT_SECRET
+        value: f0r3xm4t3-jwt-s3cr3t-k3y-2024-v2-ultra-secure-random-string-xyz
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: PORT
+        value: 10000
