@@ -4,8 +4,9 @@
  */
 
 
-const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
-const API_URL = rawApiUrl.endsWith('/api/v1') ? rawApiUrl : `${rawApiUrl}/api/v1`;
+import { getApiBaseUrl } from './apiUrl';
+
+const API_URL = getApiBaseUrl();
 
 export default API_URL;
 

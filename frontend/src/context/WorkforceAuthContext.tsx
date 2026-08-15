@@ -1,9 +1,9 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export const WORKFORCE_API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
-).replace(/\/$/, '');
+import { getWorkforceApiBaseUrl } from '@/lib/apiUrl';
+
+export const WORKFORCE_API_URL = getWorkforceApiBaseUrl();
 
 interface WorkforceEmployee {
   id: string;
