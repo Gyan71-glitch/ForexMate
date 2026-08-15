@@ -42,12 +42,15 @@ async function bootstrap() {
   const httpAdapterHost = app.get(HttpAdapterHost);
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost));
 
-  const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
-    .split(',')
-    .map((o) => o.trim());
-
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean | string) => void) => {
+      if (!origin) return callback(null, true);
+      const configured = (process.env.CORS_ORIGINS || '*').split(',').map((s) => s.trim());
+      if (configured.includes('*') || configured.includes(origin) || process.env.NODE_ENV !== 'production') {
+        return callback(null, origin);
+      }
+      return callback(null, origin);
+    },
     credentials: true,
   });
 

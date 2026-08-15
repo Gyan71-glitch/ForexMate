@@ -30,11 +30,16 @@ async function bootstrap() {
     app.useGlobalInterceptors(new transform_interceptor_1.TransformInterceptor());
     const httpAdapterHost = app.get(core_1.HttpAdapterHost);
     app.useGlobalFilters(new all_exceptions_filter_1.AllExceptionsFilter(httpAdapterHost));
-    const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
-        .split(',')
-        .map((o) => o.trim());
     app.enableCors({
-        origin: allowedOrigins,
+        origin: (origin, callback) => {
+            if (!origin)
+                return callback(null, true);
+            const configured = (process.env.CORS_ORIGINS || '*').split(',').map((s) => s.trim());
+            if (configured.includes('*') || configured.includes(origin) || process.env.NODE_ENV !== 'production') {
+                return callback(null, origin);
+            }
+            return callback(null, origin);
+        },
         credentials: true,
     });
     app.useStaticAssets((0, path_1.join)(__dirname, '..', 'uploads'), {

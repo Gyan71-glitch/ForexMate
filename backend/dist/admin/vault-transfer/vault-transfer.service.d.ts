@@ -23,10 +23,10 @@ export declare class VaultTransferService {
         updatedAt: Date;
         reason: string;
         currencyCode: string;
+        quantity: Prisma.Decimal;
         transferNumber: string;
         sourceBranchId: string;
         destBranchId: string;
-        quantity: Prisma.Decimal;
         requestedById: string;
         approvedById: string | null;
     })[]>;
@@ -43,10 +43,10 @@ export declare class VaultTransferService {
         updatedAt: Date;
         reason: string;
         currencyCode: string;
+        quantity: Prisma.Decimal;
         transferNumber: string;
         sourceBranchId: string;
         destBranchId: string;
-        quantity: Prisma.Decimal;
         requestedById: string;
         approvedById: string | null;
     }>;

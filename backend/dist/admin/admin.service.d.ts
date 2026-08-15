@@ -110,9 +110,9 @@ export declare class AdminService {
                 createdAt: Date;
                 updatedAt: Date;
                 amount: import("@prisma/client/runtime/library").Decimal;
-                quantity: number;
-                denomination: number;
                 cashAllocationId: string;
+                denomination: number;
+                quantity: number;
             }[];
         } & {
             id: string;

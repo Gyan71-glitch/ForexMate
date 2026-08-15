@@ -39,7 +39,14 @@ async function bootstrap() {
     app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost));
 
     app.enableCors({
-      origin: true,
+      origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean | string) => void) => {
+        if (!origin) return callback(null, true);
+        const configured = (process.env.CORS_ORIGINS || '*').split(',').map((s) => s.trim());
+        if (configured.includes('*') || configured.includes(origin) || process.env.NODE_ENV !== 'production') {
+          return callback(null, origin);
+        }
+        return callback(null, origin);
+      },
       credentials: true,
     });
 

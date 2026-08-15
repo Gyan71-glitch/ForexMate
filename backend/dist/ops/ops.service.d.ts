@@ -324,8 +324,8 @@ export declare class OpsService {
         denominations: {
             id: string;
             updatedAt: Date;
-            vaultId: string;
             denomination: number;
+            vaultId: string;
             noteCount: number;
         }[];
     } & {
