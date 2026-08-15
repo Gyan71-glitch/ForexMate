@@ -36,7 +36,7 @@ export default function RootLayout({
       className={cn("h-full", "antialiased", inter.variable, "font-sans")}
     >
       <body className="min-h-full flex flex-col font-sans selection:bg-blue-500 selection:text-white">
-        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '000000000000-dummyforexmateclientid.apps.googleusercontent.com'}>
           <QueryProvider>
             <AuthProvider>
               <SyncListener />
