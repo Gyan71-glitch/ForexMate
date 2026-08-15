@@ -1,14 +1,18 @@
 import type { NextConfig } from "next";
 
-const rawBackendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-const backendBase = rawBackendUrl.replace(/\/api\/v1\/?$/, '').replace(/\/$/, '');
+function formatBackendUrl(url: string | undefined): string {
+  if (!url || !url.trim()) return 'http://localhost:3001';
+  let trimmed = url.trim().replace(/\/api\/v1\/?$/, '').replace(/\/$/, '');
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    trimmed = `https://${trimmed}`;
+  }
+  return trimmed;
+}
+
+const backendBase = formatBackendUrl(process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL);
 
 const nextConfig: NextConfig = {
   typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true },
-  turbopack: {
-    root: __dirname,
-  },
   async rewrites() {
     return [
       {
