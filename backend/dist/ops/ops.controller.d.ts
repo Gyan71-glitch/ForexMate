@@ -318,8 +318,8 @@ export declare class OpsController {
         denominations: {
             id: string;
             updatedAt: Date;
-            denomination: number;
             vaultId: string;
+            denomination: number;
             noteCount: number;
         }[];
     } & {

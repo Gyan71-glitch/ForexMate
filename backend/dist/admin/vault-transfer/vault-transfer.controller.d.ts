@@ -22,10 +22,10 @@ export declare class VaultTransferController {
         updatedAt: Date;
         reason: string;
         currencyCode: string;
-        quantity: import("@prisma/client/runtime/library").Decimal;
         transferNumber: string;
         sourceBranchId: string;
         destBranchId: string;
+        quantity: import("@prisma/client/runtime/library").Decimal;
         requestedById: string;
         approvedById: string | null;
     })[]>;
@@ -42,10 +42,10 @@ export declare class VaultTransferController {
         updatedAt: Date;
         reason: string;
         currencyCode: string;
-        quantity: import("@prisma/client/runtime/library").Decimal;
         transferNumber: string;
         sourceBranchId: string;
         destBranchId: string;
+        quantity: import("@prisma/client/runtime/library").Decimal;
         requestedById: string;
         approvedById: string | null;
     }>;

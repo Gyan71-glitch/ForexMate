@@ -86,9 +86,9 @@ export declare class WorkforceController {
                     createdAt: Date;
                     updatedAt: Date;
                     amount: import("@prisma/client/runtime/library").Decimal;
-                    cashAllocationId: string;
-                    denomination: number;
                     quantity: number;
+                    denomination: number;
+                    cashAllocationId: string;
                 }[];
             } & {
                 id: string;
@@ -239,9 +239,9 @@ export declare class WorkforceController {
                     createdAt: Date;
                     updatedAt: Date;
                     amount: import("@prisma/client/runtime/library").Decimal;
-                    cashAllocationId: string;
-                    denomination: number;
                     quantity: number;
+                    denomination: number;
+                    cashAllocationId: string;
                 }[];
             } & {
                 id: string;
@@ -397,9 +397,9 @@ export declare class WorkforceController {
                     createdAt: Date;
                     updatedAt: Date;
                     amount: import("@prisma/client/runtime/library").Decimal;
-                    cashAllocationId: string;
-                    denomination: number;
                     quantity: number;
+                    denomination: number;
+                    cashAllocationId: string;
                 }[];
             } & {
                 id: string;
@@ -550,9 +550,9 @@ export declare class WorkforceController {
                     createdAt: Date;
                     updatedAt: Date;
                     amount: import("@prisma/client/runtime/library").Decimal;
-                    cashAllocationId: string;
-                    denomination: number;
                     quantity: number;
+                    denomination: number;
+                    cashAllocationId: string;
                 }[];
             } & {
                 id: string;
@@ -703,9 +703,9 @@ export declare class WorkforceController {
                     createdAt: Date;
                     updatedAt: Date;
                     amount: import("@prisma/client/runtime/library").Decimal;
-                    cashAllocationId: string;
-                    denomination: number;
                     quantity: number;
+                    denomination: number;
+                    cashAllocationId: string;
                 }[];
             } & {
                 id: string;
@@ -898,9 +898,9 @@ export declare class WorkforceController {
                     createdAt: Date;
                     updatedAt: Date;
                     amount: import("@prisma/client/runtime/library").Decimal;
-                    cashAllocationId: string;
-                    denomination: number;
                     quantity: number;
+                    denomination: number;
+                    cashAllocationId: string;
                 }[];
             } & {
                 id: string;
@@ -1064,9 +1064,9 @@ export declare class WorkforceController {
                 createdAt: Date;
                 updatedAt: Date;
                 amount: import("@prisma/client/runtime/library").Decimal;
-                cashAllocationId: string;
-                denomination: number;
                 quantity: number;
+                denomination: number;
+                cashAllocationId: string;
             }[];
         } & {
             id: string;
@@ -1259,9 +1259,9 @@ export declare class WorkforceController {
                 createdAt: Date;
                 updatedAt: Date;
                 amount: import("@prisma/client/runtime/library").Decimal;
-                cashAllocationId: string;
-                denomination: number;
                 quantity: number;
+                denomination: number;
+                cashAllocationId: string;
             }[];
         } & {
             id: string;

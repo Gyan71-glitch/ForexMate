@@ -14,9 +14,9 @@ export declare class CashAllocationService {
             createdAt: Date;
             updatedAt: Date;
             amount: Prisma.Decimal;
-            cashAllocationId: string;
-            denomination: number;
             quantity: number;
+            denomination: number;
+            cashAllocationId: string;
         }[];
     } & {
         id: string;
@@ -36,9 +36,9 @@ export declare class CashAllocationService {
             createdAt: Date;
             updatedAt: Date;
             amount: Prisma.Decimal;
-            cashAllocationId: string;
-            denomination: number;
             quantity: number;
+            denomination: number;
+            cashAllocationId: string;
         }[];
     } & {
         id: string;
