@@ -1,36 +1,28 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15-alpine
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
     environment:
-      POSTGRES_USER: forex_admin
-      POSTGRES_PASSWORD: forex_password_secure
-      POSTGRES_DB: forexmate_db
+      - PORT=3001
+      - DATABASE_URL=postgresql://neondb_owner:npg_Cydz4G3inBTa@ep-summer-brook-aoa67ux6-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+      - JWT_SECRET=f0r3xm4t3-jwt-s3cr3t-k3y-2024-v2-ultra-secure-random-string-xyz
+      - CORS_ORIGINS=*
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U forex_admin -d forexmate_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-volumes:
-  postgres_data:
-  redis_data:
-
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
+    depends_on:
+      - backend
+    restart: always
