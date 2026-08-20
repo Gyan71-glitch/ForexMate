@@ -448,14 +448,22 @@ export function ProductCalculatorStep() {
     const defaultDest = currency === 'USD' ? 'United States' : currency === 'EUR' ? 'Europe' : currency === 'GBP' ? 'United Kingdom' : currency === 'SGD' ? 'Singapore' : currency === 'AED' ? 'UAE' : currency === 'THB' ? 'Thailand' : 'International';
     const effectiveDestination = destination || defaultDest;
 
+    const effDepDate = departureDate || todayStr;
+    const effReturnDate = returnDate || (() => {
+      const d = new Date(effDepDate);
+      d.setDate(d.getDate() + 5);
+      return d.toISOString().split('T')[0];
+    })();
+    const effPurpose = purpose || 'TOURISM';
+
     updateDraft({
       branchId: effectiveBranchId,
       destination: effectiveDestination,
+      departureDate: effDepDate,
+      returnDate: noReturnDate ? '' : effReturnDate,
+      purpose: effPurpose,
     });
 
-    if (departureDate && returnDate && returnDate < departureDate) {
-      updateDraft({ returnDate: departureDate });
-    }
     const { sessionId } = useTransactionStore.getState();
     if (!sessionId) return;
     
@@ -467,9 +475,18 @@ export function ProductCalculatorStep() {
     });
     
     const errorMsg = useQuoteStore.getState().lockError;
-    if (errorMsg && errorMsg.toLowerCase().includes('unauthorized')) {
-      useQuoteStore.getState().clearQuote();
-      window.location.href = `/login?redirect=/buy-forex`;
+    if (errorMsg) {
+      if (
+        errorMsg.toLowerCase().includes('authenticated') ||
+        errorMsg.toLowerCase().includes('unauthorized') ||
+        errorMsg.toLowerCase().includes('login') ||
+        errorMsg.toLowerCase().includes('user must be')
+      ) {
+        useQuoteStore.getState().clearQuote();
+        window.location.href = `/login?redirect=/buy-forex`;
+        return;
+      }
+      alert(errorMsg);
       return;
     }
     
@@ -1358,18 +1375,7 @@ export function ProductCalculatorStep() {
           <div className="space-y-2">
             <Button 
               onClick={handleQuote} 
-              disabled={
-                !canGetQuote || 
-                isLocking || 
-                !amount || 
-                (isRemittance ? (
-                  !draftState.countryCode ||
-                  !draftState.purposeCode ||
-                  !draftState.beneficiaryId
-                ) : (
-                  !isSell && (!departureDate || !purpose)
-                ))
-              }
+              disabled={isLocking}
               className={`w-full md:w-1/3 text-white font-bold py-6 rounded-lg text-sm shadow-sm transition-all tracking-wider disabled:opacity-50 cursor-pointer ${
                 isSell ? 'bg-emerald-500 hover:bg-emerald-600' : isRemittance ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-orange-500 hover:bg-orange-600'
               }`}
