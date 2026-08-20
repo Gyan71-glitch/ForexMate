@@ -292,25 +292,39 @@ export function DeliveryComplianceStep() {
               Your order cannot proceed until KYC verification is completed.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col gap-3">
               <button
-                onClick={() => {
-                  useTransactionStore.getState().clearSession();
-                  window.location.href = `/kyc?orderId=${createdOrder.id}`;
+                onClick={async () => {
+                  setCreatedOrder(null);
+                  await useTransactionStore.getState().fetchWorkflow();
                 }}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-colors shadow-sm"
+                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 cursor-pointer"
               >
-                Complete KYC
+                <CreditCard className="w-4 h-4" />
+                <span>Proceed to Payment ({createdOrder.totalAmountInr ? `₹${Math.round(Number(createdOrder.totalAmountInr)).toLocaleString('en-IN')}` : `₹${displayTotalPayable.toLocaleString('en-IN')}`})</span>
+                <ArrowRight className="w-4 h-4" />
               </button>
-              <button
-                onClick={() => {
-                  useTransactionStore.getState().clearSession();
-                  window.location.href = '/dashboard';
-                }}
-                className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-gray-700 font-bold rounded-xl text-sm transition-colors border border-slate-200"
-              >
-                Later
-              </button>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => {
+                    useTransactionStore.getState().clearSession();
+                    window.location.href = `/kyc?orderId=${createdOrder.id}`;
+                  }}
+                  className="w-full py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-sm transition-colors border border-indigo-200 cursor-pointer"
+                >
+                  Complete KYC
+                </button>
+                <button
+                  onClick={() => {
+                    useTransactionStore.getState().clearSession();
+                    window.location.href = '/dashboard';
+                  }}
+                  className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-gray-700 font-bold rounded-xl text-sm transition-colors border border-slate-200 cursor-pointer"
+                >
+                  Track Later
+                </button>
+              </div>
             </div>
             
           </div>
@@ -380,28 +394,39 @@ export function DeliveryComplianceStep() {
               )}
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <div className="flex flex-col gap-3 pt-2">
                 <button
-                  onClick={() => {
-                    useTransactionStore.getState().clearSession();
-                    window.location.href = `/kyc?orderId=${createdOrder.id}`;
+                  onClick={async () => {
+                    setCreatedOrder(null);
+                    await useTransactionStore.getState().fetchWorkflow();
                   }}
-                  className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition-all shadow-md hover:shadow-indigo-200 flex items-center justify-center gap-2"
+                  className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  Complete KYC
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
+                  <CreditCard className="w-4 h-4" />
+                  <span>Proceed to Payment ({createdOrder.totalAmountInr ? `₹${Math.round(Number(createdOrder.totalAmountInr)).toLocaleString('en-IN')}` : `₹${displayTotalPayable.toLocaleString('en-IN')}`})</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => {
-                    useTransactionStore.getState().clearSession();
-                    window.location.href = '/dashboard/remittances';
-                  }}
-                  className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-gray-700 font-bold rounded-xl text-sm transition-colors border border-slate-200"
-                >
-                  Track Later
-                </button>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => {
+                      useTransactionStore.getState().clearSession();
+                      window.location.href = `/kyc?orderId=${createdOrder.id}`;
+                    }}
+                    className="w-full py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-sm transition-colors border border-indigo-200 cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    Complete KYC
+                  </button>
+                  <button
+                    onClick={() => {
+                      useTransactionStore.getState().clearSession();
+                      window.location.href = '/dashboard/remittances';
+                    }}
+                    className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-gray-700 font-bold rounded-xl text-sm transition-colors border border-slate-200 cursor-pointer"
+                  >
+                    Track Order
+                  </button>
+                </div>
               </div>
             </div>
           </div>
