@@ -39,11 +39,12 @@ export default function BranchManagementPage() {
     try {
       const [bRes, eRes, cRes] = await Promise.all([
         authFetch(`${API_URL}/admin/branches`).then(apiJson),
-        authFetch(`${API_URL}/admin/staff`).then(apiJson),
+        authFetch(`${API_URL}/admin/employees?limit=100`).then(apiJson).catch(() => authFetch(`${API_URL}/admin/staff`).then(apiJson)),
         authFetch(`${API_URL}/admin/cities`).then(apiJson),
       ]);
       setBranches(bRes || []);
-      setEmployees(eRes || []);
+      const empList = Array.isArray(eRes) ? eRes : (eRes?.data || []);
+      setEmployees(empList);
       setCities(cRes || []);
     } catch (err: any) {
       console.error('Failed to load branch data:', err);

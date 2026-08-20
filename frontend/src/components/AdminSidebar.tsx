@@ -54,6 +54,7 @@ export default function AdminSidebar() {
       title: 'Governance & Control',
       links: [
         { name: 'Order Monitor', href: '/admin/orders', icon: FileSpreadsheet },
+        { name: 'Users & KYC', href: '/admin/users', icon: Users },
         { name: 'Reports & Analytics', href: '/admin/reports', icon: BarChart3 },
         { name: 'Audit Center', href: '/admin/audit', icon: ShieldAlert },
         { name: 'System Settings', href: '/admin/settings', icon: Settings },
