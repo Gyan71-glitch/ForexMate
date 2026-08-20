@@ -6,18 +6,33 @@ export class CityService {
   constructor(private prisma: PrismaService) {}
 
   async getAllCities() {
-    return this.prisma.city.findMany({
-      include: {
-        branches: {
-          select: {
-            id: true,
-            branchName: true,
-            branchCode: true,
-            status: true,
-          },
+    const [cities, allBranches] = await Promise.all([
+      this.prisma.city.findMany({
+        orderBy: { name: 'asc' },
+      }),
+      this.prisma.branch.findMany({
+        select: {
+          id: true,
+          branchName: true,
+          branchCode: true,
+          branchCity: true,
+          cityId: true,
+          status: true,
         },
-      },
-      orderBy: { name: 'asc' },
+      }),
+    ]);
+
+    return cities.map((c) => {
+      const cityBranches = allBranches.filter(
+        (b) =>
+          b.cityId === c.id ||
+          b.branchCity?.toLowerCase() === c.name.toLowerCase() ||
+          (b.branchCity?.toLowerCase().includes('beng') && c.name.toLowerCase().includes('beng'))
+      );
+      return {
+        ...c,
+        branches: cityBranches,
+      };
     });
   }
 

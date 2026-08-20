@@ -165,6 +165,20 @@ let AdminService = class AdminService {
         if (!company) {
             throw new common_1.BadRequestException('Company profile not initialized.');
         }
+        let cityId = dto.cityId;
+        if (!cityId && dto.branchCity) {
+            const matchedCity = await this.prisma.city.findFirst({
+                where: {
+                    OR: [
+                        { name: { equals: dto.branchCity, mode: 'insensitive' } },
+                        { name: { contains: dto.branchCity.slice(0, 4), mode: 'insensitive' } },
+                    ],
+                },
+            });
+            if (matchedCity) {
+                cityId = matchedCity.id;
+            }
+        }
         const branch = await this.prisma.branch.create({
             data: {
                 companyId: company.id,
@@ -172,7 +186,7 @@ let AdminService = class AdminService {
                 branchName: dto.branchName,
                 branchAddress: dto.branchAddress,
                 branchCity: dto.branchCity,
-                cityId: dto.cityId,
+                cityId: cityId,
                 branchType: dto.branchType || 'MAIN_BRANCH',
                 lat: dto.lat,
                 lng: dto.lng,
