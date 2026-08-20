@@ -197,7 +197,11 @@ export function ProductCalculatorStep() {
 
   const handleDepartureDateChange = (newDept: string) => {
     const updates: any = { departureDate: newDept };
-    if (returnDate && newDept && returnDate < newDept) {
+    if (newDept && !draftState.returnDate && !draftState.noReturnDate) {
+      const dep = new Date(newDept);
+      dep.setDate(dep.getDate() + 5);
+      updates.returnDate = dep.toISOString().split('T')[0];
+    } else if (returnDate && newDept && returnDate < newDept) {
       updates.returnDate = newDept;
     }
     updateDraft(updates);
@@ -440,6 +444,15 @@ export function ProductCalculatorStep() {
       alert("Please enter a valid amount.");
       return;
     }
+    const effectiveBranchId = branchId || (branches.length > 0 ? branches[0].id : '');
+    const defaultDest = currency === 'USD' ? 'United States' : currency === 'EUR' ? 'Europe' : currency === 'GBP' ? 'United Kingdom' : currency === 'SGD' ? 'Singapore' : currency === 'AED' ? 'UAE' : currency === 'THB' ? 'Thailand' : 'International';
+    const effectiveDestination = destination || defaultDest;
+
+    updateDraft({
+      branchId: effectiveBranchId,
+      destination: effectiveDestination,
+    });
+
     if (departureDate && returnDate && returnDate < departureDate) {
       updateDraft({ returnDate: departureDate });
     }
@@ -450,7 +463,7 @@ export function ProductCalculatorStep() {
       product,
       currency,
       amount: Number(amount),
-      branchId,
+      branchId: effectiveBranchId,
     });
     
     const errorMsg = useQuoteStore.getState().lockError;
@@ -1354,13 +1367,10 @@ export function ProductCalculatorStep() {
                   !draftState.purposeCode ||
                   !draftState.beneficiaryId
                 ) : (
-                  !destination || 
-                  (!isSell && (!departureDate || !purpose)) ||
-                  (deliveryMethod === 'PICKUP' && !branchId) ||
-                  (deliveryMethod === 'HOME_DELIVERY' && !draftState.deliveryAddress)
+                  !isSell && (!departureDate || !purpose)
                 ))
               }
-              className={`w-full md:w-1/3 text-white font-bold py-6 rounded-lg text-sm shadow-sm transition-all tracking-wider disabled:opacity-50 ${
+              className={`w-full md:w-1/3 text-white font-bold py-6 rounded-lg text-sm shadow-sm transition-all tracking-wider disabled:opacity-50 cursor-pointer ${
                 isSell ? 'bg-emerald-500 hover:bg-emerald-600' : isRemittance ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-orange-500 hover:bg-orange-600'
               }`}
             >
