@@ -39,6 +39,9 @@ let TransactionEngineController = class TransactionEngineController {
     checkout(id, body) {
         return this.engineService.checkout(id, body.idempotencyKey);
     }
+    getSessionOrder(sessionId) {
+        return this.engineService.getSessionOrder(sessionId);
+    }
 };
 exports.TransactionEngineController = TransactionEngineController;
 __decorate([
@@ -96,6 +99,15 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], TransactionEngineController.prototype, "checkout", null);
+__decorate([
+    (0, common_1.UseGuards)(optional_jwt_auth_guard_1.OptionalJwtAuthGuard),
+    (0, common_1.Get)('session/:id/order'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get order associated with session' }),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], TransactionEngineController.prototype, "getSessionOrder", null);
 exports.TransactionEngineController = TransactionEngineController = __decorate([
     (0, swagger_1.ApiTags)('Transaction Engine (V2)'),
     (0, common_1.Controller)('transaction-engine'),

@@ -8,22 +8,22 @@ export declare class TransactionEngineService {
     private readonly logger;
     constructor(prisma: PrismaService, quotesService: QuotesService, eventBus: DomainEventBus);
     createSession(userId?: string): Promise<{
-        userId: string | null;
         id: string;
-        createdAt: Date;
         status: import(".prisma/client").$Enums.SessionStatus;
-        updatedAt: Date;
         idempotencyKey: string | null;
         draftState: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string | null;
     }>;
     updateDraftState(sessionId: string, draftState: any, requestingUserId?: string): Promise<{
-        userId: string | null;
         id: string;
-        createdAt: Date;
         status: import(".prisma/client").$Enums.SessionStatus;
-        updatedAt: Date;
         idempotencyKey: string | null;
         draftState: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string | null;
     }>;
     getWorkflowNextStep(sessionId: string, requestingUserId?: string): Promise<{
         sessionId: string;
@@ -48,16 +48,16 @@ export declare class TransactionEngineService {
     }>;
     checkout(sessionId: string, idempotencyKey: string): Promise<{
         id: string;
+        status: import(".prisma/client").$Enums.OrderStatus;
         createdAt: Date;
-        orderNumber: string;
+        updatedAt: Date;
         profileId: string;
+        sessionId: string | null;
+        orderNumber: string;
         branchId: string;
         totalAmountInr: import("@prisma/client/runtime/library").Decimal;
         deliveryMethod: string;
-        status: import(".prisma/client").$Enums.OrderStatus;
-        updatedAt: Date;
         quoteId: string | null;
-        sessionId: string | null;
         assignedStaffId: string | null;
         assignedAt: Date | null;
         productType: string;
@@ -88,4 +88,101 @@ export declare class TransactionEngineService {
         complianceLocked: boolean;
         complianceCompletedAt: Date | null;
     } | null>;
+    getSessionOrder(sessionId: string): Promise<({
+        branch: {
+            id: string;
+            status: string;
+            createdAt: Date;
+            updatedAt: Date;
+            email: string | null;
+            companyId: string;
+            branchCode: string;
+            branchName: string;
+            branchAddress: string;
+            branchCity: string;
+            cityId: string | null;
+            managerId: string | null;
+            branchType: string;
+            lat: number | null;
+            lng: number | null;
+            phone: string | null;
+            vaultCapacity: import("@prisma/client/runtime/library").Decimal;
+            workingHours: string | null;
+            cashLimitInr: import("@prisma/client/runtime/library").Decimal;
+        };
+        items: ({
+            currency: {
+                symbol: string;
+                id: string;
+                name: string;
+                code: string;
+                decimals: number;
+                isActive: boolean;
+            };
+            product: {
+                id: string;
+                name: string;
+                code: string;
+                isActive: boolean;
+            };
+        } & {
+            id: string;
+            currencyId: string;
+            amount: import("@prisma/client/runtime/library").Decimal;
+            rate: import("@prisma/client/runtime/library").Decimal;
+            inrSubtotal: import("@prisma/client/runtime/library").Decimal;
+            productId: string;
+            orderId: string;
+        })[];
+        payments: {
+            id: string;
+            status: import(".prisma/client").$Enums.PaymentStatus;
+            createdAt: Date;
+            currency: string;
+            amount: import("@prisma/client/runtime/library").Decimal;
+            orderId: string;
+            providerId: string;
+        }[];
+    } & {
+        id: string;
+        status: import(".prisma/client").$Enums.OrderStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        profileId: string;
+        sessionId: string | null;
+        orderNumber: string;
+        branchId: string;
+        totalAmountInr: import("@prisma/client/runtime/library").Decimal;
+        deliveryMethod: string;
+        quoteId: string | null;
+        assignedStaffId: string | null;
+        assignedAt: Date | null;
+        productType: string;
+        workflowType: string;
+        currentStage: string;
+        requiresKyc: boolean;
+        requiresInventory: boolean;
+        requiresPickupHandover: boolean;
+        requiresDelivery: boolean;
+        complianceStatus: string;
+        complianceCaseId: string | null;
+        travelDestination: string | null;
+        departureDate: Date | null;
+        returnDate: Date | null;
+        cancelRequested: boolean;
+        cancelReason: string | null;
+        cashierId: string | null;
+        deliveryPartnerId: string | null;
+        fulfillmentStatus: string | null;
+        assignedCentralStaffId: string | null;
+        assignedManagerId: string | null;
+        currentBranchId: string | null;
+        originalBranchId: string | null;
+        reassignedBranchId: string | null;
+        reassignmentReason: string | null;
+        reassignedAt: Date | null;
+        reassignedBy: string | null;
+        complianceLocked: boolean;
+        complianceCompletedAt: Date | null;
+    }) | null>;
 }

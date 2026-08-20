@@ -45,7 +45,7 @@ let TransactionEngineService = TransactionEngineService_1 = class TransactionEng
             throw new common_1.BadRequestException('Session is already converted to an order');
         const updateData = {
             draftState: draftState,
-            status: client_1.SessionStatus.IN_PROGRESS
+            ...(session.status === client_1.SessionStatus.CREATED ? { status: client_1.SessionStatus.IN_PROGRESS } : {}),
         };
         if (requestingUserId && !session.userId) {
             updateData.userId = requestingUserId;
@@ -422,6 +422,17 @@ let TransactionEngineService = TransactionEngineService_1 = class TransactionEng
         });
         this.logger.log(`Session ${sessionId} converted to Order ${order.id}`);
         this.eventBus.publish('OrderCreated', { orderId: order.id, userId: order.profileId, branchId: order.branchId, order });
+        return order;
+    }
+    async getSessionOrder(sessionId) {
+        const order = await this.prisma.order.findFirst({
+            where: { sessionId },
+            include: {
+                items: { include: { currency: true, product: true } },
+                payments: true,
+                branch: true,
+            },
+        });
         return order;
     }
 };

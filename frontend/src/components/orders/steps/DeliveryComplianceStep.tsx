@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import API_URL, { authFetch, apiJson } from '@/lib/api';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { AddressSelector } from '../AddressSelector';
-import { Check, Lock, Building2, Truck, ShieldCheck, MapPin, ArrowRight } from 'lucide-react';
+import { Check, Lock, Building2, Truck, ShieldCheck, MapPin, ArrowRight, CreditCard } from 'lucide-react';
 
 export function DeliveryComplianceStep() {
   const { sessionId, draftState, updateDraft, allowedActions } = useTransactionStore();

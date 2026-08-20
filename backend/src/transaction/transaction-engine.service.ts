@@ -40,7 +40,7 @@ export class TransactionEngineService {
 
     const updateData: any = {
       draftState: draftState,
-      status: SessionStatus.IN_PROGRESS 
+      ...(session.status === SessionStatus.CREATED ? { status: SessionStatus.IN_PROGRESS } : {}),
     };
 
     if (requestingUserId && !session.userId) {
@@ -481,6 +481,18 @@ export class TransactionEngineService {
     this.logger.log(`Session ${sessionId} converted to Order ${order.id}`);
     this.eventBus.publish('OrderCreated', { orderId: order.id, userId: order.profileId, branchId: order.branchId, order });
     
+    return order;
+  }
+
+  async getSessionOrder(sessionId: string) {
+    const order = await this.prisma.order.findFirst({
+      where: { sessionId },
+      include: {
+        items: { include: { currency: true, product: true } },
+        payments: true,
+        branch: true,
+      },
+    });
     return order;
   }
 }

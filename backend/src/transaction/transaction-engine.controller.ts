@@ -65,4 +65,11 @@ export class TransactionEngineController {
   ) {
     return this.engineService.checkout(id, body.idempotencyKey);
   }
+
+  @UseGuards(OptionalJwtAuthGuard)
+  @Get('session/:id/order')
+  @ApiOperation({ summary: 'Get order associated with session' })
+  getSessionOrder(@Param('id') sessionId: string) {
+    return this.engineService.getSessionOrder(sessionId);
+  }
 }

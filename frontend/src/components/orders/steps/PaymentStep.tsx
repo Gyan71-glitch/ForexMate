@@ -31,10 +31,10 @@ export function PaymentStep() {
   // Fetch Order Details
   useEffect(() => {
     if (sessionId) {
-      authFetch(`${API_URL}/dev/session/${sessionId}/order`)
+      authFetch(`${API_URL}/transaction-engine/session/${sessionId}/order`)
         .then(res => apiJson(res))
         .then(data => setOrder(data))
-        .catch(err => console.error('Failed to load dev session order:', err));
+        .catch(err => console.error('Failed to load transaction session order:', err));
     }
   }, [sessionId]);
 
@@ -210,25 +210,72 @@ export function PaymentStep() {
   }
 
   if (paymentStatus === 'SUCCESS') {
+    const isKycVerified = order?.complianceStatus === 'VERIFIED';
+
     return (
-      <CardContent className="pt-16 pb-16 flex flex-col items-center text-center animate-in fade-in duration-300">
-        <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6 animate-in zoom-in">
-          <CheckCircle size={48} />
+      <CardContent className="pt-12 pb-14 flex flex-col items-center text-center animate-in fade-in duration-300 max-w-xl mx-auto">
+        <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-5 animate-in zoom-in ring-8 ring-emerald-50">
+          <CheckCircle size={44} />
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Payment Successful!</h2>
-        <p className="text-lg text-gray-600 mb-8 max-w-md">
-          Your order has been placed successfully. You will receive an email confirmation shortly.
+
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black uppercase tracking-wider mb-3">
+          ✓ Payment Confirmed {order?.totalAmountInr ? `• ₹${Math.round(Number(order.totalAmountInr)).toLocaleString('en-IN')}` : ''}
+        </div>
+
+        <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-2">
+          {isKycVerified ? 'Payment & Order Completed!' : 'Payment Successful — Action Required'}
+        </h2>
+
+        <p className="text-sm text-slate-600 font-medium mb-6 leading-relaxed">
+          {isKycVerified
+            ? `Your payment for Order #${order?.orderNumber || ''} has been received. Your order is now being processed for dispatch.`
+            : `Your payment for Order #${order?.orderNumber || ''} has been received! As per RBI LRS compliance, please complete your KYC document verification to begin dispatch & fulfillment.`}
         </p>
-        <Button 
-          onClick={() => {
-            clearSession();
-            window.scrollTo({ top: 0, behavior: 'instant' });
-            router.push('/dashboard');
-          }}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3.5 rounded-xl text-base shadow-md"
-        >
-          Go to Dashboard
-        </Button>
+
+        {!isKycVerified ? (
+          <div className="w-full space-y-3 bg-indigo-50/60 p-6 rounded-2xl border border-indigo-100 mb-6 text-left">
+            <div className="flex items-center gap-2 text-indigo-900 font-extrabold text-sm">
+              <ShieldCheck className="w-5 h-5 text-indigo-600 shrink-0" />
+              <span>RBI KYC Verification Required</span>
+            </div>
+            <p className="text-xs text-indigo-700 font-medium leading-relaxed">
+              Upload your self-attested PAN Card & Passport copies to complete order compliance.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Button
+                onClick={() => {
+                  clearSession();
+                  window.location.href = `/kyc?orderId=${order?.id || ''}`;
+                }}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-xl text-sm transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Complete KYC Verification</span>
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  clearSession();
+                  window.scrollTo({ top: 0, behavior: 'instant' });
+                  router.push('/dashboard');
+                }}
+                className="w-full bg-white hover:bg-slate-50 text-slate-700 font-bold py-3.5 rounded-xl text-sm border border-slate-200 cursor-pointer"
+              >
+                Complete Later
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button
+            onClick={() => {
+              clearSession();
+              window.scrollTo({ top: 0, behavior: 'instant' });
+              router.push('/dashboard');
+            }}
+            className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold px-10 py-3.5 rounded-xl text-sm shadow-md cursor-pointer"
+          >
+            Go to Dashboard
+          </Button>
+        )}
       </CardContent>
     );
   }
